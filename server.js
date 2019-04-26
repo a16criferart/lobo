@@ -6,16 +6,16 @@ const router = express.Router();
 
 console.log("Vamos a cargar las páginas:");
 router.get('/',function(req,res){
-  res.sendFile(path.join(__dirname+'/index.html'));
+  res.sendFile(path.join(__dirname+'/public/index.html'));
   //__dirname : It will resolve to your project folder.
 });
 
 router.get('/jugar',function(req,res){
-  res.sendFile(path.join(__dirname+'/jugar.php'));
+  res.sendFile(path.join(__dirname+'/public/jugar.php'));
 });
 
 router.get('/perfil',function(req,res){
-  res.sendFile(path.join(__dirname+'/perfil.html'));
+  res.sendFile(path.join(__dirname+'/public/perfil.html'));
 });
 
 //add the router
