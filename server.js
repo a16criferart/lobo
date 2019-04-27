@@ -16,6 +16,10 @@ var session      = require('express-session');
 
 var configDB = require('./config/database.js');
 
+//definir archivos
+var path = require("path");
+app.use('/js', express.static(__dirname + '/public/js'));
+
 // configuration ===============================================================
 mongoose.connect(configDB.url); // connect to our database
 

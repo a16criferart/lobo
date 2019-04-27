@@ -18,6 +18,7 @@ module.exports = function(app, passport) {
         res.render('jugar.ejs', {
             user : req.user
         });
+        res.sendFile(__dirname + '/js/jugar.js');
     });
     // LOGOUT ==============================
     app.get('/logout', function(req, res) {
