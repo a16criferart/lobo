@@ -1,6 +1,6 @@
 //VARIABLES DE INICIO
   //partida
-      var estado_partida= "sinempezar";
+      var estado_partida= "sin_empezar";
       var id_sala = 1;
       //HAY QUE COMPROBAR LA PARTIDA!!!!!!!!!!!!!!!!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
       var id_partida = 1;
@@ -10,59 +10,58 @@
       var username= $('#username').text();
       console.log("usuario: "+username);
 
+  //comprobamos si existe el usuario y si no existe lo añade a la partida
+      if(comprobar_usuario(userId, username, id_partida)){
+              //comprobar el numero de jugadores en la sala
+              //comprobar_usuarios(id_partida);
+              }
   window.onload = function() {
-    //comprobamos si existe el usuario y si no existe lo añade a la partida
-        comprobar_usuario(userId);
+
+
+
+      //comprobar el numero de jugadores en la sala
+          //  db.collection("jugadores").onSnapshot(contar_jugadores);
+          //si son suficientes
+            //assignación aleatoria de rols y hacer update
+            //contador para iniciar
+            //fase 1
+          //sino no hace nada y espera
+
   };
 
-function comprobar_usuario(id_usuario){
-  const ref = db.ref("jugadores");
-  const count = ref.orderByKey().equalTo(id_usuario);
-  console.log(count);
-  if(count != null)
-    console.log("El usuario ya existe en la partida");
-  else
-    añadir_jugador(userId, username, id_partida);
-}
-  /*ref.child(id_usuario).on('value', function (snapshot) {
-       //snapshot would have list of NODES that satisfies the condition
-  var count =snapshot.val()
-	console.log("Se han encontrado " + snapshot.val() + " coincidencias");
+function comprobar_usuario(id_usuario, username, id_partida){
+  const comp = db.collection("usuarios").where("id_usuario","==",id_usuario)
+         .get().then(function(querySnapshot) {
+             const count = querySnapshot.size;
+             console.log(count);
 
-  if(count >0)
-    console.log("El usuario ya existe en la partida");
-  else
-    añadir_jugador(userId, username, id_partida);
-  });
-}
-*/
-
+             if(count >0){
+               console.log("El usuario ya existe en la partida");
+               console.log("No se va a añadir");
+             }
+             else{
+               console.log("El usuario no existia en la partida");
+               añadir_jugador(id_usuario,username,id_partida )
+             }
+         })
+  }
 
 function añadir_jugador (userId, username, id_partida) {
-  firebase.database().ref('jugadores  /' + userId).set({
+  const comp = db.collection("usuarios").add({
     id_usuario: userId,
     username: username,
     estado: "vivo",
     id_partida : id_partida,
     rol: null,
     avatar: "https://minecraftcommand.science/images/villager/farmer.png"
-  }, function(error) {
-    if (error) {
-      // The write failed...
-      console.log("Algo ha ido mal y el usuario no se ha añadido a la partida");
-      console.log(error);
-    } else {
-      // Data saved successfully!
-      console.log("Usuario añadido a la partida!");
-      //comprobar el numero de jugadores en la sala
-      //si son suficientes
-        //assignación aleatoria de rols y hacer update
-        //contador para iniciar
-        //fase 1
-      //sino no hace nada y espera
-    }
   });
+  if(comp)
+    console.log("Añadido");
+  else
+    console.log("Error al añadir");
+
 }
+
 /*
 function ciclo() {
     fase1();
