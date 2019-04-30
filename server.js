@@ -49,3 +49,18 @@ require('./app/routes.js')(app, passport); // load our routes and pass in our ap
 // launch ======================================================================
 app.listen(port);
 console.log('Cargando la página desde el puerto ' + port);
+
+
+// h ======================================================================
+function contador() {
+
+    var counter = 5;
+    var interval = setInterval(function() {
+    counter--;
+    console.log(counter)
+    if (counter == 0) {
+        // Display message
+        clearInterval(interval);
+    }
+}, 1000);
+}
