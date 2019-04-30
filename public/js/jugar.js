@@ -10,24 +10,47 @@
       var username= $('#username').text();
       console.log("usuario: "+username);
 
+
+//============PARTIDA===========
+      //Si hay cambios en la tabla jugadores, vuelve a comprobar cuantos hay
+      db.collection("usuarios").onSnapshot(comprobar_sala(id_sala));
+      //Si hay cambios en la tabla jugadores, vuelve a comprobar cuantos hay
+      db.collection("partida").onSnapshot(estado);
+//==========JUGADORES===========
   //comprobamos si existe el usuario y si no existe lo añade a la partida
       if(comprobar_usuario(userId, username, id_partida)){
-              //comprobar el numero de jugadores en la sala
-              //comprobar_usuarios(id_partida);
+            console.log("CHECK: Usuarios controlados");
               }
-  window.onload = function() {
 
+//======FUNCIONES!!======
+function comprobar_sala(partida){
+  console.log("COMPROBANDO USUARIOS EN PARTIDA >>>>");
+  const cantidad_jugadores = db.collection("usuarios").where("id_partida","==",partida)
+         .get().then(function(querySnapshot) {
+             console.log("  Hay "+ querySnapshot.size+" jugadores en esta sala!");
+             return  querySnapshot.size;
+           });
 
-
-      //comprobar el numero de jugadores en la sala
-          //  db.collection("jugadores").onSnapshot(contar_jugadores);
-          //si son suficientes
-            //assignación aleatoria de rols y hacer update
-            //contador para iniciar
-            //fase 1
+           //si son suficientes
+        if (cantidad_jugadores>=8) {
+          console.log(" >>>> Hay suficientes jugadores, empezamos");
+          //assignación aleatoria de rols y hacer update
+          //contador para iniciar
+          //fase 1 al final del contador
+        }
+        else {
+          console.log(" >>>> No hay suficientes jugadores, nos esperamos ");
           //sino no hace nada y espera
+        }
+  //sino no hace nada y espera
+}
 
-  };
+function assignacion(id_partida){
+  //Recoger los usuarios uno por uno y asignarles un rol
+}
+function contador(id_partida, tiempo){
+  //Contador de x segundos para la partida
+}
 
 function comprobar_usuario(id_usuario, username, id_partida){
   const comp = db.collection("usuarios").where("id_usuario","==",id_usuario)
