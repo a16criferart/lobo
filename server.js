@@ -61,7 +61,7 @@ io.on('connection', function(socket) {
 
   socket.on('cambiar_estado_partida', function(estado) {
     console.log("El servidor ha recibido un cambio en la partida");
-    console.log("El estado de la partida es :" +estado.text);
+    console.log("El estado de la partida es :" + estado.text);
 
     if(estado.text=="sin_empezar")
       console.log("La partida aún no ha empezado");

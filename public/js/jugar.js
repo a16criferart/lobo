@@ -2,7 +2,7 @@
 
 
   //partida
-      var estado_partida= "contador";
+      var estado_partida;
       var id_sala = "phk5QBx6nefQHBrePDAz";
       //HAY QUE COMPROBAR LA PARTIDA!!!!!!!!!!!!!!!!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
       var id_partida = "avKFrF5ZFS9OxrJDgAy3";
@@ -26,6 +26,18 @@
 
 //======= FUNCIONES SOCKET =====
 
+function get_estado(){
+  //Contador de x segundos para la partida
+  const comp = db.collection("partida").where("id_partida","==",id_partida).get().then(function(querySnapshot) {
+    querySnapshot.forEach(function(doc) {
+        // doc.data() is never undefined for query doc snapshots
+        console.log(" => ", doc.data().estado );
+        estado_partida=doc.data().estado;
+        return estado_partida;
+    });
+
+});
+}
 //Conexión al servidor
 var socket = io.connect('http://localhost:8080', { 'forceNew': true });
 //
@@ -35,8 +47,15 @@ socket.on('test', function() {
   })
 
 function cambiar_estado_partida() {
-    var estado  = get_estado();
-    socket.emit('cambiar_estado_partida', {text:estado});
+  const comp = db.collection("partida").where("id_partida","==",id_partida).get().then(function(querySnapshot) {
+    querySnapshot.forEach(function(doc) {
+        // doc.data() is never undefined for query doc snapshots
+        console.log(" => ", doc.data().estado );
+        estado_partida=doc.data().estado;
+
+        socket.emit('cambiar_estado_partida', {text:estado_partida});
+      });
+    });
   }
 //======FUNCIONES!!======
 
@@ -105,17 +124,6 @@ function cambiar_estado(estado){
 
 }
 
-function get_estado(){
-  //Contador de x segundos para la partida
-  const comp = db.collection("partida").where("id_partida","==",id_partida).get().then(function(querySnapshot) {
-    querySnapshot.forEach(function(doc) {
-        // doc.data() is never undefined for query doc snapshots
-        console.log(" => ", doc.data().estado );
-        return doc.data().estado;
-    });
-
-});
-}
 
 function comprobar_usuario(id_usuario, username, id_partida){
   console.log("===Usuario===");
