@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.10.1/firebase.js"></script>
+
+    <title>Document</title>
+</head>
+<script>
+window.onload = function() {
+  tablero();
+};
+// Initialize Firebase
+var config = {
+    apiKey: "AIzaSyDvlVoN5isTaupv0tnoL9m8UzPEdHT3qXg",
+    authDomain: "werewolf-140eb.firebaseapp.com",
+    databaseURL: "https://werewolf-140eb.firebaseio.com",
+    projectId: "werewolf-140eb",
+    storageBucket: "werewolf-140eb.appspot.com",
+    messagingSenderId: "352508924475"
+  };
+  firebase.initializeApp(config);
+  const db = firebase.firestore();
+
+
+function tablero(){
+
+
+    var docRef = db.collection("usuarios");
+    var jugadores = []
+    var avatares = [];
+    var trHTML;
+    $('#partida').empty();
+    db.collection("usuarios")
+    .get()
+    .then(function(querySnapshot) {
+        
+        querySnapshot.forEach(function(doc) {
+            
+            // doc.data() is never undefined for query doc snapshots
+            console.log(doc.id, " => ", doc.data());
+            jugadores.push(doc.data());
+            trHTML += '<tr><td><img src="'+ doc.data().avatar+'" alt="Avatar" width="42" height="42">'
+                    + '</td><td>' + doc.data().username
+                    + '</td><td>' + doc.data().estado
+                    + '</td><td>' + doc.data().id_partida
+                    + '</td><td>' + doc.data().id_usuario 
+                    + '</td><td>' + doc.data().rol
+                    
+                    + '</td></tr>';
+            //console.log(doc.data().avatar)
+            
+        });
+
+        console.table(jugadores)
+        //console.log(jugadores[0].avatar);
+        $('#partida').append(trHTML);
+    })
+    .catch(function(error) {
+        console.log("Error getting documents: ", error);
+    });
+}
+
+
+</script>
+<body>
+
+    <div id="partida"></div>
+    
+</body>
+</html>
