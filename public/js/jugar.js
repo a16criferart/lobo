@@ -1,6 +1,8 @@
 //==========VARIABLES===========
+
+
   //partida
-      var estado_partida= "sin_empezar";
+      var estado_partida= "contador";
       var id_sala = "phk5QBx6nefQHBrePDAz";
       //HAY QUE COMPROBAR LA PARTIDA!!!!!!!!!!!!!!!!<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
       var id_partida = "avKFrF5ZFS9OxrJDgAy3";
@@ -20,12 +22,27 @@
       //Si hay cambios en la tabla jugadores, vuelve a comprobar cuantos hay
       db.collection("usuarios").onSnapshot(comprobar_sala);
       //Si hay cambios en la tabla jugadores, vuelve a comprobar cuantos hay
-      //db.collection("partida").onSnapshot(estado);
+      db.collection("partida").onSnapshot(cambiar_estado_partida);
 
+//======= FUNCIONES SOCKET =====
+
+//Conexión al servidor
+var socket = io.connect('http://localhost:8080', { 'forceNew': true });
+//
+
+socket.on('test', function() {
+  console.log("El servidor ha recibido al usuario "+userId);
+  })
+
+function cambiar_estado_partida() {
+    var estado  = get_estado();
+    socket.emit('cambiar_estado_partida', {text:estado});
+  }
 //======FUNCIONES!!======
 
 
 function comprobar_sala(){
+  get_estado();
   console.log("===Sala===");
   console.log("¿¿Partida empezada??");
   if(estado_partida=="sin_empezar"){
@@ -50,7 +67,7 @@ function comprobar_sala(){
           //sino no hace nada y espera
         }
       }
-    else 
+    else
       console.log("La partida ya ha empezado");
 }
 
@@ -63,7 +80,7 @@ function assignacion(id_partida){
     .then(function(querySnapshot) {
         querySnapshot.forEach(function(doc) {
                 var ref = db.collection("usuarios").doc(doc.id);
-        
+
                 return ref.update({
                     rol: ":D"
                 });
@@ -79,17 +96,25 @@ function cambiar_estado(estado){
       estado: estado
   })
   .then(function() {
-    console.log("Estado cambiado");  
+    console.log("Estado cambiado");
   })
   .catch(function(error) {
       // The document probably doesn't exist.
       console.error("Error al actualizar el estado: ", error);
   });
-        
+
 }
 
-function contador(id_partida, tiempo){
+function get_estado(){
   //Contador de x segundos para la partida
+  const comp = db.collection("partida").where("id_partida","==",id_partida).get().then(function(querySnapshot) {
+    querySnapshot.forEach(function(doc) {
+        // doc.data() is never undefined for query doc snapshots
+        console.log(" => ", doc.data().estado );
+        return doc.data().estado;
+    });
+
+});
 }
 
 function comprobar_usuario(id_usuario, username, id_partida){
@@ -97,7 +122,7 @@ function comprobar_usuario(id_usuario, username, id_partida){
   const comp = db.collection("usuarios").where("id_usuario","==",id_usuario)
          .get().then(function(querySnapshot) {
              if(querySnapshot.size > 0){
-               console.log("El usuario ya existe en la partida"); 
+               console.log("El usuario ya existe en la partida");
                console.log("No se va a añadir");
              }
              else{

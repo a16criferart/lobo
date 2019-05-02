@@ -20,6 +20,12 @@ module.exports = function(app, passport) {
         });
         res.sendFile(__dirname + '/js/jugar.js');
     });
+
+    app.get('/test', function(req, res) {
+        res.render('test.ejs', {
+            user : req.user
+        });
+    });
     // LOGOUT ==============================
     app.get('/logout', function(req, res) {
         req.logout();

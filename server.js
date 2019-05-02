@@ -20,6 +20,7 @@ var configDB = require('./config/database.js');
 var path = require("path");
 app.use('/js', express.static(__dirname + '/public/js'));
 
+
 // configuration ===============================================================
 mongoose.connect(configDB.url); // connect to our database
 
@@ -46,10 +47,39 @@ app.use(flash()); // use connect-flash for flash messages stored in session
 // routes ======================================================================
 require('./app/routes.js')(app, passport); // load our routes and pass in our app and fully configured passport
 
-// launch ======================================================================
-app.listen(port);
-console.log('Cargando la página desde el puerto ' + port);
 
+// SOCKETS Y PARTIDA!! #hate :(  ======================================================================
+
+var server = require('http').Server(app);
+var io = require('socket.io')(server);
+
+
+
+io.on('connection', function(socket) {
+  console.log('Alguien se ha conectado con Sockets');
+  socket.emit('test');
+
+  socket.on('cambiar_estado_partida', function(estado) {
+    console.log("El servidor ha recibido un cambio en la partida");
+    console.log("El estado de la partida es :" +estado.text);
+
+    if(estado.text=="sin_empezar")
+      console.log("La partida aún no ha empezado");
+    else if (estado.text == "contador") {
+      contador();
+    }
+    else if (estado.text=="acabada") {
+      console.log("La partida ha acabado");
+    }
+  });
+});
+
+
+
+// launch ======================================================================
+server.listen(8080, function() {
+  console.log("Servidor corriendo en http://localhost:8080");
+});
 
 // h ======================================================================
 function contador() {
@@ -60,6 +90,7 @@ function contador() {
     console.log(counter)
     if (counter == 0) {
         // Display message
+        console.log("Contador terminado");
         clearInterval(interval);
     }
 }, 1000);
