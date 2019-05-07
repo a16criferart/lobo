@@ -50,28 +50,92 @@ require('./app/routes.js')(app, passport); // load our routes and pass in our ap
 
 // SOCKETS Y PARTIDA!! #hate :(  ======================================================================
 
+//CONEXIO DB
+const admin = require('firebase-admin');
+
+var serviceAccount = require('./public/js/key.json');
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+var db = admin.firestore()
+
+//VARS DE LA DB
+var DBJugadores = db.collection('usuarios');
+var DBPartida = db.collection('partida');
+
+//VARS DE LA PARTIDA
+var IDPartida=  "avKFrF5ZFS9OxrJDgAy3";
+var IDSala = "phk5QBx6nefQHBrePDAz";
+var EstadoPartida ="sin_empezar";
+console.log("El estado actual de la partida es:" +EstadoPartida);
+
+//SNAPSHOTS
+
+  //SNAPSHOT JUGADORES DE LA SALA
+    var SnapJugadores =DBJugadores.onSnapshot(llistaJugadors => {
+      console.log("SNAPSHOT ===> jugadors");
+      var getJugadores = db.collection('usuarios').get()
+      .then(usuarios => {
+          console.log("En la sala hay:  "+usuarios.size+ " jugadores");
+          //Si hay 8 o más
+          if(usuarios.size>8){
+            console.log("Hay suficientes jugadores para empezar, vamos a cambiar el estado de la partida");
+            //empieza la partida
+            cambiar_estado(EstadoPartida="empezar");
+            //asignar roles
+            //contador
+            //bucle
+              //noche
+              //Contador
+              //votaciones
+              //noche
+              //contador
+          }
+          //Si no los hay
+          else
+            console.log("Aún no hay suficientes jugadores");
+      })
+      .catch(err => {
+        console.log('Error getting document', err);
+      });
+
+    }, err => {
+      console.log(`Encountered error: ${err}`);
+    });
+
+  //SNAPSHOT PARTIDA
+    var SnapPartida =DBPartida.onSnapshot(docSnapshot => {
+    console.log("SNAPSHOT ===> partida");
+
+    //Cogemos el estado de la PARTIDA
+    var getEstado =DBPartida.doc(IDPartida).get()
+      .then(doc => {
+        if (!doc.exists) {
+          console.log('No se ha encontrado la partida!!!');
+        } else {
+          EstadoPartida= doc.data().estado;
+          console.log('Estado de la partida:'+EstadoPartida);
+        }
+      });
+
+        //socket.emit('cambiar_estado_partida', {text:estado_partida});
+
+    }, err => {
+      console.log(`Encountered error: ${err}`);
+    });
+
+
+//SOCKET
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 
 
-
 io.on('connection', function(socket) {
   console.log('Alguien se ha conectado con Sockets');
-  socket.emit('test');
+  socket.emit('hola');
 
-  socket.on('cambiar_estado_partida', function(estado) {
-    console.log("El servidor ha recibido un cambio en la partida");
-    console.log("El estado de la partida es :" + estado.text);
-
-    if(estado.text=="sin_empezar")
-      console.log("La partida aún no ha empezado");
-    else if (estado.text == "contador") {
-      contador();
-    }
-    else if (estado.text=="acabada") {
-      console.log("La partida ha acabado");
-    }
-  });
 });
 
 
@@ -81,7 +145,22 @@ server.listen(8080, function() {
   console.log("Servidor corriendo en http://localhost:8080");
 });
 
-// h ======================================================================
+// FUNCIONES ======================================================================
+
+function cambiar_estado(estado){
+  var ref = db.collection("partida").doc(IDPartida);
+  ref.update({
+      estado: estado
+  })
+  .then(function() {
+    console.log("Recibido cambio de estado: '"+estado+"' en el FB");
+  })
+  .catch(function(error) {
+      // The document probably doesn't exist.
+      console.error("Error al actualizar el estado: ", error);
+  });
+}
+
 function contador() {
 
     var counter = 5;
@@ -95,3 +174,72 @@ function contador() {
     }
 }, 1000);
 }
+
+/*
+function comprobar_sala(){
+  get_estado();
+  console.log("===Sala===");
+  console.log("¿¿Partida empezada??");
+  if(estado_partida=="sin_empezar"){
+    console.log("Sin empezar!");
+    console.log("COMPROBANDO SALA  >>>>");
+    const cantidad_jugadores = db.collection("usuarios").where("id_partida","==",id_partida)
+         .get().then(function(querySnapshot) {
+             console.log("  Hay "+ querySnapshot.size+" jugadores en esta sala!");
+             return  querySnapshot.size;
+           });
+
+           //si son suficientes
+        if (cantidad_jugadores>=8) {
+          console.log(" >>>> Hay suficientes jugadores, empezamos");
+          //assignación aleatoria de rols y hacer update
+          assignacion(id_partida);
+          //contador para iniciar
+          //fase 1 al final del contador
+        }
+        else {
+          console.log(" >>>> No hay suficientes jugadores, nos esperamos ");
+          //sino no hace nada y espera
+        }
+      }
+    else
+      console.log("La partida ya ha empezado");
+}
+
+
+
+
+  function assignacion(id_partida){
+    console.log("===ROLES===");
+    console.log("Asignando roles a los users ! :)");
+    //Recoger los usuarios uno por uno y asignarles un rol
+    db.collection("usuarios").where("id_partida", "==", id_partida)
+      .get()
+      .then(function(querySnapshot) {
+          querySnapshot.forEach(function(doc) {
+                  var ref = db.collection("usuarios").doc(doc.id);
+
+                  return ref.update({
+                      rol: ":D"
+                  });
+              });
+          });
+        console.log("Roles asignados, cambiando estado");
+        cambiar_estado("roles");
+  }
+
+    socket.on('cambiar_estado_partida', function(estado) {
+      console.log("El servidor ha recibido un cambio en la partida");
+      console.log("El estado de la partida es :" + estado.text);
+
+      if(estado.text=="sin_empezar")
+        console.log("La partida aún no ha empezado");
+      else if (estado.text == "contador") {
+        contador();
+      }
+      else if (estado.text=="acabada") {
+        console.log("La partida ha acabado");
+      }
+    });
+
+*/
