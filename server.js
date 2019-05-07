@@ -68,7 +68,7 @@ var DBPartida = db.collection('partida');
 //VARS DE LA PARTIDA
 var IDPartida=  "avKFrF5ZFS9OxrJDgAy3";
 var IDSala = "phk5QBx6nefQHBrePDAz";
-var EstadoPartida ="sin_empezar";
+var EstadoPartida ="Pendiente";
 console.log("El estado actual de la partida es:" +EstadoPartida);
 
 //SNAPSHOTS
@@ -79,22 +79,20 @@ console.log("El estado actual de la partida es:" +EstadoPartida);
       var getJugadores = db.collection('usuarios').get()
       .then(usuarios => {
           console.log("En la sala hay:  "+usuarios.size+ " jugadores");
-          //Si hay 8 o más
-          if(usuarios.size>8){
-            console.log("Hay suficientes jugadores para empezar, vamos a cambiar el estado de la partida");
-            //empieza la partida
-            cambiar_estado(EstadoPartida="empezar");
-            //asignar roles
-            //contador
-            //bucle
-              //noche
-              //Contador
-              //votaciones
-              //noche
-              //contador
+          //Si hay 8 o más y no se ha empezado la partida
+          if(usuarios.size>=8){
+            console.log(EstadoPartida);
+            manejar_estado();
           }
+            //bucle
+            //noche
+            //Contador
+            //votaciones
+            //noche
+            //contador
+
           //Si no los hay
-          else
+          else if(usuarios.size<8)
             console.log("Aún no hay suficientes jugadores");
       })
       .catch(err => {
@@ -146,7 +144,41 @@ server.listen(8080, function() {
 });
 
 // FUNCIONES ======================================================================
+function manejar_estado(){
 
+  if(EstadoPartida=="Pendiente"){
+  console.log("Hay suficientes jugadores para empezar, vamos a cambiar el estado de la partida");
+  //empieza la partida
+  cambiar_estado(EstadoPartida="Empezada");
+  if(EstadoPartida=="Empezada"){
+    //asignar roles
+    //contador para empezar la partida. Le pasamos el siguiente estado
+    console.log("Cuenta atrás para empezar la partida: ");
+    contador(10, "Noche");
+  }
+}
+
+  if(EstadoPartida=="Noche"){
+    console.log("Es de noche.");
+    console.log("Los lobos votan a un aldeano para morir");
+
+    contador(10, "Dia");
+  }
+  if (EstadoPartida=="Votaciones") {
+    console.log("Es momento de votar a los lobos/asesino");
+    console.log("Volverá la noche");
+
+    contador(10, "Noche");
+  }
+ if (EstadoPartida=="Dia") {
+    console.log("Es de día.");
+    console.log("Un par de aldeanos han muerto por el asesino y por los lobos");
+    console.log("Es momento de discutir");
+
+    contador(10, "Votaciones");
+  }
+
+}
 function cambiar_estado(estado){
   var ref = db.collection("partida").doc(IDPartida);
   ref.update({
@@ -161,9 +193,9 @@ function cambiar_estado(estado){
   });
 }
 
-function contador() {
+function contador(tiempo, SiguienteEstado) {
 
-    var counter = 5;
+    var counter = tiempo;
     var interval = setInterval(function() {
     counter--;
     console.log(counter)
@@ -171,6 +203,9 @@ function contador() {
         // Display message
         console.log("Contador terminado");
         clearInterval(interval);
+        //cambiar_estado(SiguienteEstado);
+        EstadoPartida=SiguienteEstado;
+        manejar_estado();
     }
 }, 1000);
 }
