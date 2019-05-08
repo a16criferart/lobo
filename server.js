@@ -69,8 +69,8 @@ var DBPartida = db.collection('partida');
 var IDPartida=  "avKFrF5ZFS9OxrJDgAy3";
 var IDSala = "phk5QBx6nefQHBrePDAz";
 var EstadoPartida ="Pendiente";
+var NumUsuarios=" ";
 console.log("El estado actual de la partida es:" +EstadoPartida);
-var usuarios="";
 
 //SNAPSHOTS
 
@@ -81,7 +81,7 @@ var usuarios="";
       .then(usuarios => {
           console.log("En la sala hay:  "+usuarios.size+ " jugadores");
           //Si hay 8 o más y no se ha empezado la partida
-          usuarios = usuarios.size;
+          NumUsuarios=usuarios.size;
           if(usuarios.size==16)
             cambiar_estado(EstadoPartida="Empezada");
           else if(usuarios.size>=8){
@@ -151,16 +151,15 @@ server.listen(8080, function() {
 function manejar_estado(){
 
   if(EstadoPartida=="Pendiente"){
-  console.log("Hay suficientes jugadores para empezar, vamos a cambiar el estado de la partida dentro de un minuto");
-  // 8----60
-  // 9----x
-  var tiempo=60000;
-  if(usuarios<10 && usuarios>8)
-    tiempo = 30000;
-  else
-    tiempo = 10000;
   //empieza la partida
-  setTimeout(cambiar_estado, tiempo,"Empezada");
+  var time = 60000;
+  if(NumUsuarios>8 && NumUsuarios<10)
+    time = 30000;
+  else if (NumUsuarios>10)
+    time = 10000;
+
+  console.log("Hay suficientes jugadores para empezar, vamos a cambiar el estado de la partida dentro de "+time/1000+" segundos. Esperamos posibles nuevos jugadores.");
+  setTimeout(cambiar_estado,time,"Empezada");
 }
 if(EstadoPartida=="Empezada"){
   //asignar roles
