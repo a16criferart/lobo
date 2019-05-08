@@ -82,21 +82,15 @@ console.log("El estado actual de la partida es:" +EstadoPartida);
           console.log("En la sala hay:  "+usuarios.size+ " jugadores");
           //Si hay 8 o más y no se ha empezado la partida
           NumUsuarios=usuarios.size;
-          if(usuarios.size==16)
+          if(usuarios.size==16 && EstadoPartida=="Pendiente")
             cambiar_estado(EstadoPartida="Empezada");
-          else if(usuarios.size>=8){
+          else if(usuarios.size>=8  && EstadoPartida=="Pendiente"){
             console.log(EstadoPartida);
             manejar_estado();
           }
-            //bucle
-            //noche
-            //Contador
-            //votaciones
-            //noche
-            //contador
 
           //Si no los hay
-          else if(usuarios.size<8)
+          else if(usuarios.size<8  && EstadoPartida=="Pendiente")
             console.log("Aún no hay suficientes jugadores");
       })
       .catch(err => {
@@ -151,10 +145,13 @@ server.listen(8080, function() {
 function manejar_estado(){
 
   if(EstadoPartida=="Pendiente"){
-  //empieza la partida
+  //empieza la partida tras una espera de unos segundos
+  //Si hay 8 jugadores esperaremos 60s
   var time = 60000;
+  //si hay menos de 10 y mas de 8, 30s
   if(NumUsuarios>8 && NumUsuarios<10)
     time = 30000;
+  //si hay más de 10, 10s
   else if (NumUsuarios>10)
     time = 10000;
 
@@ -163,6 +160,7 @@ function manejar_estado(){
 }
 if(EstadoPartida=="Empezada"){
   //asignar roles
+  asignar_roles();
   //contador para empezar la partida. Le pasamos el siguiente estado
   console.log("Cuenta atrás para empezar la partida: ");
   contador(10, "Noche");
@@ -174,14 +172,14 @@ if(EstadoPartida=="Empezada"){
     contador(10, "Dia");
   }
   if (EstadoPartida=="Votaciones") {
-    console.log("Es momento de votar a los lobos/asesino");
+    console.log("Es momento de votar a los lobos/ Psicopata");
     console.log("Volverá la noche");
 
     contador(10, "Noche");
   }
  if (EstadoPartida=="Dia") {
     console.log("Es de día.");
-    console.log("Un par de aldeanos han muerto por el asesino y por los lobos");
+    console.log("Un par de aldeanos han muerto por el  Psicopata y por los lobos");
     console.log("Es momento de discutir");
 
     contador(10, "Votaciones");
@@ -204,89 +202,169 @@ function cambiar_estado(estado){
   });
 
 }
-
 function contador(tiempo, SiguienteEstado) {
 
     var counter = tiempo;
-    var interval = setInterval(function() {
-    counter--;
-    console.log(counter)
-    if (counter == 0) {
-        // Display message
-        console.log("Contador terminado");
-        clearInterval(interval);
-        //cambiar_estado(SiguienteEstado);
-        EstadoPartida=SiguienteEstado;
-        manejar_estado();
-    }
-}, 1000);
-}
-
-/*
-function comprobar_sala(){
-  get_estado();
-  console.log("===Sala===");
-  console.log("¿¿Partida empezada??");
-  if(estado_partida=="sin_empezar"){
-    console.log("Sin empezar!");
-    console.log("COMPROBANDO SALA  >>>>");
-    const cantidad_jugadores = db.collection("usuarios").where("id_partida","==",id_partida)
-         .get().then(function(querySnapshot) {
-             console.log("  Hay "+ querySnapshot.size+" jugadores en esta sala!");
-             return  querySnapshot.size;
-           });
-
-           //si son suficientes
-        if (cantidad_jugadores>=8) {
-          console.log(" >>>> Hay suficientes jugadores, empezamos");
-          //assignación aleatoria de rols y hacer update
-          assignacion(id_partida);
-          //contador para iniciar
-          //fase 1 al final del contador
-        }
-        else {
-          console.log(" >>>> No hay suficientes jugadores, nos esperamos ");
-          //sino no hace nada y espera
-        }
+      var interval = setInterval(function() {
+      counter--;
+      console.log(counter)
+      if (counter == 0) {
+          // Display message
+          console.log("Contador terminado");
+          clearInterval(interval);
+          //cambiar_estado(SiguienteEstado);
+          EstadoPartida=SiguienteEstado;
+          manejar_estado();
       }
-    else
-      console.log("La partida ya ha empezado");
+  }, 1000);
+}
+
+//====ROLES====
+
+function asignar_roles(){
+  var Roles = [];
+  console.log("Asignando roles a los users ! :)");
+    /* Si hay 8 jugadores:
+      -lobos 2
+      -1 vidente
+      -Pistolero
+      - Psicopata
+      -Cura
+      -Doctor
+      -1 aldeano
+    */
+  if(NumUsuarios==8) {
+    Roles = ["Lobo", "Lobo", "Vidente", "Pistolero", "Psicopata", "Cura", "Doctor", "Aldeano"];
+    shuffle_rols(Roles);
+}
+  /*
+    Si hay 9
+    -lobos 3
+    -1 vidente
+    -Pistolero
+    - Psicopata
+    -Cura
+    -Doctor
+    -1 aldeano*/
+  else if (NumUsuarios==9) {
+    Roles = ["Lobo", "Lobo","Lobo", "Vidente", "Pistolero", "Psicopata", "Cura", "Doctor", "Aldeano"];
+    shuffle_rols(Roles);
+
+  }
+  /*
+      Si hay 10
+      -lobos 3
+      -2 videntes
+      -Pistolero
+      - Psicopata
+      -Cura
+      -Bufon
+      -Doctor
+      */
+  else if (NumUsuarios==10) {
+    Roles = ["Lobo", "Lobo", "Lobo", "Vidente", "Vidente", "Pistolero", "Psicopata", "Cura", "Doctor", "Bufon"];
+    shuffle_rols(Roles);
+
+  }
+
+  /*
+      Si hay 11
+      -lobos 3
+      -2 videntes
+      -Pistolero
+      - Psicopata
+      -Cura
+      -Bufon
+      -Doctor
+      -Guardaespaldas
+      */
+  else if (NumUsuarios==11) {
+    Roles = ["Lobo", "Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicopata", "Cura", "Doctor", "Bufon", "Guardaespaldas"];
+    shuffle_rols(Roles);
+
+  }
+  /*
+      Si hay 12
+      -lobos 4
+      -2 videntes
+      -Pistolero
+      - Psicopata
+      -Cura
+      -Bufon
+      -Doctor
+      -Guardaespaldas*/
+  else if(NumUsuarios==12){
+    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicopata", "Cura", "Doctor", "Bufon", "Guardaespaldas"];
+    shuffle_rols(Roles);
+
+  }
+  /*
+  Si hay 13
+  -lobos 4
+  -2 videntes
+  -Pistolero
+  - Psicopata
+  -Cura
+  -bufon
+  - Doctor
+  - Hechizero (revela 1 vez el rol a todos)
+  -Guardaespaldas
+  */
+  else if (NumUsuarios==13) {
+    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicopata", "Cura", "Doctor", "Bufon", "Guardaespaldas", "Hechizero"];
+    shuffle_rols(Roles);
+
+  }
+  /*
+      Si hay +14
+        El resto son aldeanos
+  */
+  else if (NumUsuarios==14) {
+    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicopata", "Cura", "Doctor", "Bufon", "Guardaespaldas", "Hechizero", "Aldeano"];
+    shuffle_rols(Roles);
+
+  }
+  else if (NumUsuarios==15) {
+    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicopata", "Cura", "Doctor", "Bufon", "Guardaespaldas", "Hechizero", "Aldeano", "Aldeano"];
+    shuffle_rols(Roles);
+
+  }
+  else if (NumUsuarios==16) {
+    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicopata", "Cura", "Doctor", "Bufon", "Guardaespaldas", "Aldeano", "Hechizero", "Aldeano","Aldeano"];
+    shuffle_rols(Roles);
+
+  }
+  //error
+  else
+    console.log("Algo ha ido mal. No deberías haber llegado aquí");
 }
 
 
+function shuffle_rols(array){
+	//Longitud
+  var tamaño = array.length;
 
-
-  function assignacion(id_partida){
-    console.log("===ROLES===");
-    console.log("Asignando roles a los users ! :)");
-    //Recoger los usuarios uno por uno y asignarles un rol
-    db.collection("usuarios").where("id_partida", "==", id_partida)
+  //Por cada jugador
+ db.collection("usuarios").where("id_partida", "==",IDPartida)
       .get()
       .then(function(querySnapshot) {
           querySnapshot.forEach(function(doc) {
-                  var ref = db.collection("usuarios").doc(doc.id);
-
-                  return ref.update({
-                      rol: ":D"
-                  });
-              });
-          });
-        console.log("Roles asignados, cambiando estado");
-        cambiar_estado("roles");
-  }
-
-    socket.on('cambiar_estado_partida', function(estado) {
-      console.log("El servidor ha recibido un cambio en la partida");
-      console.log("El estado de la partida es :" + estado.text);
-
-      if(estado.text=="sin_empezar")
-        console.log("La partida aún no ha empezado");
-      else if (estado.text == "contador") {
-        contador();
-      }
-      else if (estado.text=="acabada") {
-        console.log("La partida ha acabado");
-      }
-    });
-
-*/
+            //Por cada jugador en partida
+              //Copiamos el array
+              var copia = array;
+		   	   //Longitud
+			        var tamaño = copia.length;
+           // Cogemos el valor aleatorio
+              i = Math.floor(Math.random() * tamaño--);
+              var rol_tocado = copia[i];
+  				//Quitarlo del array
+  				array.splice(i,1);
+				   //Repetir
+	         console.log(rol_tocado+" asignado.");
+            var ref = db.collection("usuarios").doc(doc.id);
+             return ref.update({
+               rol: rol_tocado
+             });
+           });
+       });
+}

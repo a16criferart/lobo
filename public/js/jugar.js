@@ -10,8 +10,6 @@
 
 
 //============PARTIDA===========
-//cargar tablero
-  tablero();
   //======= FUNCIONES SOCKET =====
 
   //Conexión al servidor
@@ -92,14 +90,14 @@ function tablero(){
   db.collection("usuarios")
   .get()
   .then(function(querySnapshot) {
-      
-      
+
+
       querySnapshot.forEach(function(doc) {
           cont++;
           // doc.data() is never undefined for query doc snapshots
           console.log(doc.id, " => ", doc.data());
           //jugadores.push(doc.data());
-          trHTML += '<td><img class="avatar" src="'+ doc.data().avatar +'" alt="Avatar">' 
+          trHTML += '<td><img class="avatar" src="'+ doc.data().avatar +'" alt="Avatar">'
               + '<div class="username"><b>' + doc.data().username + '</b>(3)</div>'
               + '<div class="rol">' + doc.data().rol+ '</div>'+ '</td>';
 
@@ -110,8 +108,8 @@ function tablero(){
           //console.log(doc.data().avatar)
 
       });
-      
-         
+
+
       console.table(jugadores)
       //console.log(jugadores[0].avatar);
       $('#partida').append(trHTML);
@@ -120,3 +118,6 @@ function tablero(){
       console.log("Error getting documents: ", error);
   });
 }
+
+//cargar tablero
+  tablero();
