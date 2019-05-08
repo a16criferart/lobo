@@ -70,6 +70,7 @@ var IDPartida=  "avKFrF5ZFS9OxrJDgAy3";
 var IDSala = "phk5QBx6nefQHBrePDAz";
 var EstadoPartida ="Pendiente";
 console.log("El estado actual de la partida es:" +EstadoPartida);
+var usuarios="";
 
 //SNAPSHOTS
 
@@ -80,7 +81,10 @@ console.log("El estado actual de la partida es:" +EstadoPartida);
       .then(usuarios => {
           console.log("En la sala hay:  "+usuarios.size+ " jugadores");
           //Si hay 8 o más y no se ha empezado la partida
-          if(usuarios.size>=8){
+          usuarios = usuarios.size;
+          if(usuarios.size==16)
+            cambiar_estado(EstadoPartida="Empezada");
+          else if(usuarios.size>=8){
             console.log(EstadoPartida);
             manejar_estado();
           }
@@ -147,17 +151,23 @@ server.listen(8080, function() {
 function manejar_estado(){
 
   if(EstadoPartida=="Pendiente"){
-  console.log("Hay suficientes jugadores para empezar, vamos a cambiar el estado de la partida");
+  console.log("Hay suficientes jugadores para empezar, vamos a cambiar el estado de la partida dentro de un minuto");
+  // 8----60
+  // 9----x
+  var tiempo=60000;
+  if(usuarios<10 && usuarios>8)
+    tiempo = 30000;
+  else
+    tiempo = 10000;
   //empieza la partida
-  cambiar_estado(EstadoPartida="Empezada");
-  if(EstadoPartida=="Empezada"){
-    //asignar roles
-    //contador para empezar la partida. Le pasamos el siguiente estado
-    console.log("Cuenta atrás para empezar la partida: ");
-    contador(10, "Noche");
-  }
+  setTimeout(cambiar_estado, tiempo,"Empezada");
 }
-
+if(EstadoPartida=="Empezada"){
+  //asignar roles
+  //contador para empezar la partida. Le pasamos el siguiente estado
+  console.log("Cuenta atrás para empezar la partida: ");
+  contador(10, "Noche");
+}
   if(EstadoPartida=="Noche"){
     console.log("Es de noche.");
     console.log("Los lobos votan a un aldeano para morir");
@@ -180,17 +190,20 @@ function manejar_estado(){
 
 }
 function cambiar_estado(estado){
+  EstadoPartida=estado;
   var ref = db.collection("partida").doc(IDPartida);
   ref.update({
       estado: estado
   })
   .then(function() {
     console.log("Recibido cambio de estado: '"+estado+"' en el FB");
+    manejar_estado();
   })
   .catch(function(error) {
       // The document probably doesn't exist.
       console.error("Error al actualizar el estado: ", error);
   });
+
 }
 
 function contador(tiempo, SiguienteEstado) {
