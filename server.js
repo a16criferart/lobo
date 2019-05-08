@@ -132,7 +132,7 @@ var io = require('socket.io')(server);
 
 io.on('connection', function(socket) {
   console.log('Alguien se ha conectado con Sockets');
-  socket.emit('hola');
+  socket.emit('hola', EstadoPartida, IDPartida);
 
 });
 
