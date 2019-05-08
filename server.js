@@ -19,7 +19,7 @@ var configDB = require('./config/database.js');
 //definir archivos
 var path = require("path");
 app.use('/js', express.static(__dirname + '/public/js'));
-
+app.use('/img', express.static(__dirname + '/public/img'));
 
 // configuration ===============================================================
 mongoose.connect(configDB.url); // connect to our database

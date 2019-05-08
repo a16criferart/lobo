@@ -10,7 +10,8 @@
 
 
 //============PARTIDA===========
-
+//cargar tablero
+  tablero();
   //======= FUNCIONES SOCKET =====
 
   //Conexión al servidor
@@ -79,57 +80,43 @@ function añadir_jugador (userId, username, IDPartida) {
     console.log("Error al añadir");
 }
 
-//==============================
+function tablero(){
 
 
+  var docRef = db.collection("usuarios");
+  var jugadores = [];
+  var avatares = [];
+  var trHTML = '<tr>';
+  var cont=0;
+  $('#partida').empty();
+  db.collection("usuarios")
+  .get()
+  .then(function(querySnapshot) {
+      
+      
+      querySnapshot.forEach(function(doc) {
+          cont++;
+          // doc.data() is never undefined for query doc snapshots
+          console.log(doc.id, " => ", doc.data());
+          //jugadores.push(doc.data());
+          trHTML += '<td><img class="avatar" src="'+ doc.data().avatar +'" alt="Avatar">' 
+              + '<div class="username"><b>' + doc.data().username + '</b>(3)</div>'
+              + '<div class="rol">' + doc.data().rol+ '</div>'+ '</td>';
 
+          if (cont==4){
+              trHTML += '<tr>'
+              cont=0;
+          }
+          //console.log(doc.data().avatar)
 
-
-/*
-function ciclo() {
-    fase1();
-
-    setTimeout( fase1, 15000);
+      });
+      
+         
+      console.table(jugadores)
+      //console.log(jugadores[0].avatar);
+      $('#partida').append(trHTML);
+  })
+  .catch(function(error) {
+      console.log("Error getting documents: ", error);
+  });
 }
-
-function fase1() {
-    contador();
-    console.log ("FASE 1");
-    //setTimeout(fase2, 5000);
-    return setTimeout(fase2, 5000);
-}
-function fase2() {
-    contador();
-    console.log ("FASE 2");
-    return setTimeout(fase3, 5000);
-}
-function fase3() {
-    contador();
-    console.log ("FASE 3");
-    return setTimeout(fase1, 5000);
-}
-function contador() {
-
-    var counter = 5;
-    var interval = setInterval(function() {
-    counter--;
-    console.log(counter)
-    if (counter == 0) {
-        // Display message
-        clearInterval(interval);
-    }
-}, 1000);
-}
-
-function pre_contador() {
-
-var counter = 15;
-var interval = setInterval(function() {
-counter--;
-console.log(counter)
-if (counter == 0) {
-    // Display message
-    clearInterval(interval);
-    }
-}, 1000);
-}*/
