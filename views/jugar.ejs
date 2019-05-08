@@ -10,10 +10,53 @@
 
 
     <style>
-        body         { padding-top:80px; word-wrap:break-word; }
-    </style>
+      td{
+          border: 1px solid transparent;
+          height: 150px;
+          width:150px;
+      
+      
+      }  
+      .avatar{
+          width: 100%;
+          height: 60%;
+      
+      }
+      body{
+          
+          background-size: 100%;
+          padding-top:5px; word-wrap:break-word;
+      }
+      .username{
+          height: 20%;
+          text-align: center;
+      }
+      #partida{
+          border: 1px solid black;
+          height: 616px;
+          width: 616px;
+          background: rgba(46, 46, 53, 0.5);
+          /*background: rgba(141, 186, 255, 0.52);*/
+          color: whitesmoke;
+      }
+      .rol{
+          height: 20%;
+          text-align: center;
+          width: 150px;
+          overflow: hidden;
+      }
+      .dia{
+        background-image: url("/img/fondo.jpg");
+      }
+      .noche{
+        background-image: url("/img/fondo_noche.jpg");
+      }
+      
+      
+      
+      </style>
 </head>
-<body>
+<body class="dia">
 <div class="container">
 
     <div class="page-header text-center">
@@ -27,22 +70,7 @@
 
     <div class="row">
 
-<table>
-  <tr>
-    <td>
-      <img src="" alt="">
-      <div class="">
-        nombre
-      </div>
-      <div class="">
-        rol
-      </div>
-    </td><td></td><td></td><td></td>
-  </tr>
-  <tr>
-
-  </tr>
-</table>
+      <div id="partida"></div>
 
     </div>
 
