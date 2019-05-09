@@ -127,9 +127,7 @@ function añadir_jugador (userId, username, IDPartida) {
 function tablero(){
 
 
-  var docRef = db.collection("usuarios");
-  var jugadores = [];
-  var avatares = [];
+
   var trHTML = '<tr>';
   var cont=0;
   $('#partida').empty();
@@ -166,3 +164,37 @@ function tablero(){
 
 //cargar tablero
   tablero();
+
+  //chat
+  function autoscroll(){
+    var objDiv = document.getElementById("messages");
+    objDiv.scrollTop = objDiv.scrollHeight;
+  }
+  socket.on('messages', function(data) {
+    console.log(data);
+    render(data);
+    autoscroll();
+  })
+  
+  function render (data) {
+    var html = data.map(function(elem, index) {
+      return(`<div>
+                <strong>${elem.author}</strong>:
+                <em>${elem.text}</em>
+              </div>`);
+    }).join(" ");
+  
+    document.getElementById('messages').innerHTML = html;
+    $('#texto').val('');
+  }
+  
+  function addMessage(e) {
+    var message = {
+      author: username,
+      text: document.getElementById('texto').value
+    };
+  
+    socket.emit('new-message', message);
+    return false;
+  }
+  
