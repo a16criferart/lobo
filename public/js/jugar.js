@@ -139,7 +139,7 @@ function añadir_jugador (userId, username, IDPartida) {
     rol: null,
     rol_visible: "Aldeano",
     votos:null,
-    avatar: "https://minecraftcommand.science/images/villager/farmer.png"
+    avatar: "http://i66.tinypic.com/10ctdhh.jpg"
   });
   if(comp){
     console.log("Añadido");
