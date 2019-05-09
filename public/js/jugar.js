@@ -1,6 +1,5 @@
 //==========VARIABLES===========
   var IDPartida="";
-  var cliente = false;
 
   //Datos de usuario
       console.log("===DATOS===");
@@ -8,9 +7,8 @@
       console.log("id: "+userId);
       var username= $('#username').text();
       console.log("usuario: "+username);
+      var rol = null;
 
-
-//============PARTIDA===========
   //======= FUNCIONES SOCKET =====
 
   //Conexión al servidor
@@ -32,18 +30,21 @@
     }
     else {
       check_usuario_sala(userId, IDPartida);
-      socket.emit("recibido", {valor:cliente});
+      //cargamos el tablero a usuarios reconectados
+      tablero();
     }
 
   })
 
-
+//==============CODIGO DE PARTIDA================
   socket.on("estado", function(EstadoPartida, tiempo){
     var Info = document.getElementById('InfoPartida');
-    Info.innerHTML = "Hay un cambio";
+    //actualizamos tablero por si hay cambios
+    tablero();
 
     console.log("¡LA PARTIDA HA TENIDO UN CAMBIO DE ESTADO!");
     console.log(EstadoPartida);
+
 
     if(EstadoPartida=="Empezada"){
       //contador para empezar la partida. Le pasamos el siguiente estado
@@ -73,7 +74,10 @@
 
   });
 
-
+  socket.on("rolesAsignados", function(){
+    //cogemos el rol del usuario ahora por si se ha conectado tarde
+    coger_rol();
+  });
 
   socket.on('tiempo', function(segundos) {
     var TiempoPartida = document.getElementById('segundos');
@@ -83,6 +87,19 @@
   });
 
 //======FUNCIONES!!======
+
+function coger_rol(){
+  db.collection("usuarios").where("id_usuario","==",userId)
+  .get()
+  .then(function(querySnapshot) {
+      querySnapshot.forEach(function(doc) {
+      rol= doc.data().rol;
+      console.log(rol);
+    })
+  });
+
+}
+
 function comprobar_usuario(id_usuario, username, IDPartida){
   console.log("===Usuario===");
   const comp = db.collection("usuarios").where("id_usuario","==",id_usuario)
@@ -90,14 +107,10 @@ function comprobar_usuario(id_usuario, username, IDPartida){
              if(querySnapshot.size > 0){
                console.log("El usuario ya existe en la partida");
                console.log("No se va a añadir");
-               cliente= false;
-                       socket.emit("recibido", {valor:cliente});
              }
              else{
                console.log("El usuario no existia en la partida");
                añadir_jugador(id_usuario,username,IDPartida )
-               cliente=true;
-                       socket.emit("recibido", {valor:cliente});
              }
          })
   }
@@ -127,16 +140,14 @@ function añadir_jugador (userId, username, IDPartida) {
   });
   if(comp){
     console.log("Añadido");
-    cliente=true;
+    tablero();
   }
   else{
     console.log("Error al añadir");
-    cliente=false;
   }
 }
 
 function tablero(){
-
 
   var docRef = db.collection("usuarios");
   var jugadores = [];
