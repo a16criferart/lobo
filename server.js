@@ -217,6 +217,7 @@ function contador(tiempo, SiguienteEstado) {
       var interval = setInterval(function() {
       counter--;
       console.log(counter)
+      io.sockets.emit("tiempo", counter);
       if (counter == 0) {
           // Display message
           console.log("Contador terminado");
