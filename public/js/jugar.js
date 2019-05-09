@@ -36,9 +36,39 @@
     }
 
   })
-  socket.on("estado", function(EstadoPartida){
+  socket.on("estado", function(EstadoPartida, tiempo){
+    var Info = document.getElementById('InfoPartida');
+    Info.innerHTML = "Hay un cambio";
+
     console.log("¡LA PARTIDA HA TENIDO UN CAMBIO DE ESTADO!");
     console.log(EstadoPartida);
+
+    if(EstadoPartida=="Empezada"){
+      //contador para empezar la partida. Le pasamos el siguiente estado
+      console.log("Cuenta atrás para empezar la partida. aprox:"+tiempo+" segundos");
+      Info.innerHTML = "Cuenta atrás para empezar la partida. aprox:"+tiempo+" segundos";
+
+    }
+      if(EstadoPartida=="Noche"){
+        console.log("Es de noche.");
+        console.log("Los lobos votan a un aldeano para morir");
+        Info.innerHTML = ("Es de noche. Los lobos votan a un aldeano para morir");
+
+      }
+      if (EstadoPartida=="Votaciones") {
+        console.log("Es momento de votar a los lobos/ Psicopata");
+        console.log("Volverá la noche");
+        Info.innerHTML = ("Es momento de votar a los lobos/ Psicopata.Volverá la noche en aprox:"+tiempo+" segundos") ;
+
+      }
+     if (EstadoPartida=="Dia") {
+        console.log("Es de día.");
+        console.log("Un par de aldeanos han muerto por el  Psicopata y por los lobos");
+        console.log("Es momento de discutir");
+        Info.innerHTML = ("Es de día. Un par de aldeanos han muerto por el  Psicopata y por los lobos.Es momento de discutir" ) ;
+
+      }
+
   });
 
 //======FUNCIONES!!======

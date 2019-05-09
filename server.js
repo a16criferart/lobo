@@ -143,6 +143,7 @@ io.on('connection', function(socket) {
 
 // FUNCIONES ======================================================================
 function manejar_estado(){
+  var tiempo_espera="";
 
   if(EstadoPartida=="Pendiente"){
   //empieza la partida tras una espera de unos segundos
@@ -163,17 +164,20 @@ if(EstadoPartida=="Empezada"){
   asignar_roles();
   //contador para empezar la partida. Le pasamos el siguiente estado
   console.log("Cuenta atrás para empezar la partida: ");
+  tiempo_espera=10;
   contador(10, "Noche");
 }
   if(EstadoPartida=="Noche"){
     console.log("Es de noche.");
     console.log("Los lobos votan a un aldeano para morir");
+    tiempo_espera=10;
 
     contador(10, "Dia");
   }
   if (EstadoPartida=="Votaciones") {
     console.log("Es momento de votar a los lobos/ Psicopata");
     console.log("Volverá la noche");
+    tiempo_espera=10;
 
     contador(10, "Noche");
   }
@@ -181,11 +185,12 @@ if(EstadoPartida=="Empezada"){
     console.log("Es de día.");
     console.log("Un par de aldeanos han muerto por el  Psicopata y por los lobos");
     console.log("Es momento de discutir");
+    tiempo_espera=10;
 
     contador(10, "Votaciones");
   }
   //Hemos acabado, enviamos el estado de la PARTIDA
-  io.sockets.emit("estado", EstadoPartida);
+  io.sockets.emit("estado", EstadoPartida, tiempo_espera);
 }
 
 
