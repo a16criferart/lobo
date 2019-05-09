@@ -148,10 +148,10 @@ function manejar_estado(){
   if(EstadoPartida=="Pendiente"){
   //empieza la partida tras una espera de unos segundos
   //Si hay 8 jugadores esperaremos 60s
-  var time = 60000;
+  var time = 10000;
   //si hay menos de 10 y mas de 8, 30s
   if(NumUsuarios>8 && NumUsuarios<10)
-    time = 30000;
+    time = 10000;
   //si hay más de 10, 10s
   else if (NumUsuarios>10)
     time = 10000;
@@ -217,6 +217,7 @@ function contador(tiempo, SiguienteEstado) {
       var interval = setInterval(function() {
       counter--;
       console.log(counter)
+      io.sockets.emit("tiempo", counter);
       if (counter == 0) {
           // Display message
           console.log("Contador terminado");
@@ -376,6 +377,7 @@ function shuffle_rols(array){
              });
            });
        });
+      io.sockets.emit("rolesAsignados");
 }
 
 // launch ======================================================================

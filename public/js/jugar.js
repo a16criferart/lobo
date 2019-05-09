@@ -1,6 +1,5 @@
 //==========VARIABLES===========
   var IDPartida="";
-  var cliente = false;
 
   //Datos de usuario
       console.log("===DATOS===");
@@ -8,9 +7,8 @@
       console.log("id: "+userId);
       var username= $('#username').text();
       console.log("usuario: "+username);
+      var rol = null;
 
-
-//============PARTIDA===========
   //======= FUNCIONES SOCKET =====
 
   //Conexión al servidor
@@ -32,46 +30,79 @@
     }
     else {
       check_usuario_sala(userId, IDPartida);
-      socket.emit("recibido", {valor:cliente});
+      //cargamos el tablero a usuarios reconectados
+      tablero();
     }
 
   })
+
+//==============CODIGO DE PARTIDA================
   socket.on("estado", function(EstadoPartida, tiempo){
     var Info = document.getElementById('InfoPartida');
-    Info.innerHTML = "Hay un cambio";
+    //actualizamos tablero por si hay cambios
+    tablero();
+    //Comprobamos los roles en todos los casos menos en empezar, que es cuando se asignan
+    if(EstadoPartida!="Empezada")
+      coger_rol();
 
     console.log("¡LA PARTIDA HA TENIDO UN CAMBIO DE ESTADO!");
     console.log(EstadoPartida);
 
+
     if(EstadoPartida=="Empezada"){
       //contador para empezar la partida. Le pasamos el siguiente estado
       console.log("Cuenta atrás para empezar la partida. aprox:"+tiempo+" segundos");
-      Info.innerHTML = "Cuenta atrás para empezar la partida. aprox:"+tiempo+" segundos";
+      Info.innerHTML = "Cuenta atrás para empezar la partida. <div id='segundos'><br>Tiempo: 0 segundos</div>";
 
     }
       if(EstadoPartida=="Noche"){
         console.log("Es de noche.");
         console.log("Los lobos votan a un aldeano para morir");
-        Info.innerHTML = ("Es de noche. Los lobos votan a un aldeano para morir");
+        Info.innerHTML = ("Es de noche. Los lobos votan a un aldeano para morir.  <div id='segundos'><br>Tiempo: 0 segundos</div>");
 
       }
       if (EstadoPartida=="Votaciones") {
         console.log("Es momento de votar a los lobos/ Psicopata");
         console.log("Volverá la noche");
-        Info.innerHTML = ("Es momento de votar a los lobos/ Psicopata.Volverá la noche en aprox:"+tiempo+" segundos") ;
+        Info.innerHTML = ("Es momento de votar a los lobos/ Psicopata. Volverá la noche pronto.  <div id='segundos'><br>Tiempo: 0 segundos</div>") ;
 
       }
      if (EstadoPartida=="Dia") {
         console.log("Es de día.");
         console.log("Un par de aldeanos han muerto por el  Psicopata y por los lobos");
         console.log("Es momento de discutir");
-        Info.innerHTML = ("Es de día. Un par de aldeanos han muerto por el  Psicopata y por los lobos.Es momento de discutir" ) ;
+        Info.innerHTML = ("Es de día. Es momento de discutir quién es malo.  <div id='segundos'><br>Tiempo: 0 segundos</div>" ) ;
 
       }
 
   });
 
+  socket.on("rolesAsignados", function(){
+    //cogemos el rol del usuario ahora por si se ha conectado tarde
+    coger_rol();
+  });
+
+  socket.on('tiempo', function(segundos) {
+    var TiempoPartida = document.getElementById('segundos');
+
+    console.log(segundos);
+    TiempoPartida.innerHTML = " <br>Tiempo:</b><i> "+segundos+" segundos</i>";
+  });
+
 //======FUNCIONES!!======
+
+function coger_rol(){
+  db.collection("usuarios").where("id_usuario","==",userId)
+  .get()
+  .then(function(querySnapshot) {
+      querySnapshot.forEach(function(doc) {
+      rol= doc.data().rol;
+      console.log(rol);
+    })
+  });
+
+}
+
 function comprobar_usuario(id_usuario, username, IDPartida){
   console.log("===Usuario===");
   const comp = db.collection("usuarios").where("id_usuario","==",id_usuario)
@@ -79,14 +110,10 @@ function comprobar_usuario(id_usuario, username, IDPartida){
              if(querySnapshot.size > 0){
                console.log("El usuario ya existe en la partida");
                console.log("No se va a añadir");
-               cliente= false;
-                       socket.emit("recibido", {valor:cliente});
              }
              else{
                console.log("El usuario no existia en la partida");
                añadir_jugador(id_usuario,username,IDPartida )
-               cliente=true;
-                       socket.emit("recibido", {valor:cliente});
              }
          })
   }
@@ -116,11 +143,10 @@ function añadir_jugador (userId, username, IDPartida) {
   });
   if(comp){
     console.log("Añadido");
-    cliente=true;
+    tablero();
   }
   else{
     console.log("Error al añadir");
-    cliente=false;
   }
 }
 
