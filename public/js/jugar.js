@@ -41,6 +41,9 @@
     var Info = document.getElementById('InfoPartida');
     //actualizamos tablero por si hay cambios
     tablero();
+    //Comprobamos los roles en todos los casos menos en empezar, que es cuando se asignan
+    if(EstadoPartida!="Empezada")
+      coger_rol();
 
     console.log("¡LA PARTIDA HA TENIDO UN CAMBIO DE ESTADO!");
     console.log(EstadoPartida);
