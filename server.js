@@ -82,7 +82,7 @@ console.log("El estado actual de la partida es:" +EstadoPartida);
           console.log("En la sala hay:  "+usuarios.size+ " jugadores");
           //Si hay 8 o más y no se ha empezado la partida
           NumUsuarios=usuarios.size;
-          if(usuarios.size==16 && EstadoPartida=="Pendiente")
+          if(usuarios.size==26 && EstadoPartida=="Pendiente")
             cambiar_estado(EstadoPartida="Empezada");
           else if(usuarios.size>=8  && EstadoPartida=="Pendiente"){
             console.log(EstadoPartida);
@@ -116,8 +116,6 @@ console.log("El estado actual de la partida es:" +EstadoPartida);
         }
       });
 
-        //socket.emit('cambiar_estado_partida', {text:estado_partida});
-
     }, err => {
       console.log(`Encountered error: ${err}`);
     });
@@ -126,20 +124,22 @@ console.log("El estado actual de la partida es:" +EstadoPartida);
 //SOCKET
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
-
+var clients = [];
 
 io.on('connection', function(socket) {
-  console.log('Alguien se ha conectado con Sockets');
   socket.emit('hola', EstadoPartida, IDPartida);
 
+  socket.on("recibido", function(data){
+    if(data.valor==true){
+      console.log("Cliente nuevo recibido");
+      clients.push(socket);
+    }
+  });
+
 });
 
 
 
-// launch ======================================================================
-server.listen(8080, function() {
-  console.log("Servidor corriendo en http://localhost:8080");
-});
 
 // FUNCIONES ======================================================================
 function manejar_estado(){
@@ -184,8 +184,12 @@ if(EstadoPartida=="Empezada"){
 
     contador(10, "Votaciones");
   }
-
+  //Hemos acabado, enviamos el estado de la PARTIDA
+  io.sockets.emit("estado", EstadoPartida);
 }
+
+
+
 function cambiar_estado(estado){
   EstadoPartida=estado;
   var ref = db.collection("partida").doc(IDPartida);
@@ -200,8 +204,8 @@ function cambiar_estado(estado){
       // The document probably doesn't exist.
       console.error("Error al actualizar el estado: ", error);
   });
-
 }
+
 function contador(tiempo, SiguienteEstado) {
 
     var counter = tiempo;
@@ -220,7 +224,7 @@ function contador(tiempo, SiguienteEstado) {
 }
 
 //====ROLES====
-
+//Detallados para cada grupo de jugadores
 function asignar_roles(){
   var Roles = [];
   console.log("Asignando roles a los users ! :)");
@@ -368,3 +372,8 @@ function shuffle_rols(array){
            });
        });
 }
+
+// launch ======================================================================
+server.listen(8080, function() {
+  console.log("Servidor corriendo en http://localhost:8080");
+});

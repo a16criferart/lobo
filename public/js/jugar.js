@@ -1,5 +1,6 @@
 //==========VARIABLES===========
   var IDPartida="";
+  var cliente = false;
 
   //Datos de usuario
       console.log("===DATOS===");
@@ -23,15 +24,22 @@
     console.log("El estado de la partida es:  "+EstadoPartida);
     IDPartida=id_partida;
     //SI  LA PARTIDA ESTÁ SIN EMPEZAR, LE DEJAMOS ENTRAR
-    if(EstadoPartida=="Pendiente")
+    if(EstadoPartida=="Pendiente"){
     //EXISTIA?
     //SI NO EXISTE LO AÑADIRÁ, SINO NO
-          comprobar_usuario(userId, username, IDPartida);
+      comprobar_usuario(userId, username, IDPartida);
+
+    }
     else {
       check_usuario_sala(userId, IDPartida);
+      socket.emit("recibido", {valor:cliente});
     }
-    })
 
+  })
+  socket.on("estado", function(EstadoPartida){
+    console.log("¡LA PARTIDA HA TENIDO UN CAMBIO DE ESTADO!");
+    console.log(EstadoPartida);
+  });
 
 //======FUNCIONES!!======
 function comprobar_usuario(id_usuario, username, IDPartida){
@@ -41,10 +49,14 @@ function comprobar_usuario(id_usuario, username, IDPartida){
              if(querySnapshot.size > 0){
                console.log("El usuario ya existe en la partida");
                console.log("No se va a añadir");
+               cliente= false;
+                       socket.emit("recibido", {valor:cliente});
              }
              else{
                console.log("El usuario no existia en la partida");
                añadir_jugador(id_usuario,username,IDPartida )
+               cliente=true;
+                       socket.emit("recibido", {valor:cliente});
              }
          })
   }
@@ -72,10 +84,14 @@ function añadir_jugador (userId, username, IDPartida) {
     votos:null,
     avatar: "https://minecraftcommand.science/images/villager/farmer.png"
   });
-  if(comp)
+  if(comp){
     console.log("Añadido");
-  else
+    cliente=true;
+  }
+  else{
     console.log("Error al añadir");
+    cliente=false;
+  }
 }
 
 function tablero(){
@@ -95,7 +111,7 @@ function tablero(){
       querySnapshot.forEach(function(doc) {
           cont++;
           // doc.data() is never undefined for query doc snapshots
-          console.log(doc.id, " => ", doc.data());
+          //console.log(doc.id, " => ", doc.data());
           //jugadores.push(doc.data());
           trHTML += '<td><img class="avatar" src="'+ doc.data().avatar +'" alt="Avatar">'
               + '<div class="username"><b>' + doc.data().username + '</b>(3)</div>'
@@ -110,7 +126,6 @@ function tablero(){
       });
 
 
-      console.table(jugadores)
       //console.log(jugadores[0].avatar);
       $('#partida').append(trHTML);
   })
