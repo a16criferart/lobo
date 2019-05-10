@@ -124,18 +124,34 @@ console.log("El estado actual de la partida es:" +EstadoPartida);
 //SOCKET
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
-var clients = [];
+var votos = new Map();
 
 io.on('connection', function(socket) {
   socket.emit('hola', EstadoPartida, IDPartida);
 
-  socket.on("recibido", function(data){
-    if(data.valor==true){
-      console.log("Cliente nuevo recibido");
-      clients.push(socket);
-    }
-  });
+  socket.on("voto", function(UsuarioVotado, IDUser) {
+    var NumVotos = 0;
+      var NumVotos2 = 0;
+    //Si es hora de votar actua:
+    if(EstadoPartida == "Votaciones"){
+      console.log("El usuario "+IDUser+" ha votado a "+UsuarioVotado);
 
+      //IDUser es el que vota, UsuarioVotado al que votamos
+      votos.set(IDUser, UsuarioVotado);
+
+      for (var [key, value] of votos.entries() ) {
+        if(value==UsuarioVotado)
+          NumVotos++;
+        if(key == UsuarioVotado)
+          NumVotos2++;
+      }
+
+            console.log("Tiene "+NumVotos);
+                  console.log("Tiene "+NumVotos2);
+      io.sockets.emit('VotoRecibido', UsuarioVotado, IDUser, NumVotos);
+    }
+
+    });
 });
 
 
@@ -148,16 +164,16 @@ function manejar_estado(){
   if(EstadoPartida=="Pendiente"){
   //empieza la partida tras una espera de unos segundos
   //Si hay 8 jugadores esperaremos 60s
-  var time = 10000;
+  tiempo_espera = 10000;
   //si hay menos de 10 y mas de 8, 30s
   if(NumUsuarios>8 && NumUsuarios<10)
-    time = 10000;
+    tiempo_espera = 10000;
   //si hay más de 10, 10s
   else if (NumUsuarios>10)
-    time = 10000;
+    tiempo_espera = 10000;
 
-  console.log("Hay suficientes jugadores para empezar, vamos a cambiar el estado de la partida dentro de "+time/1000+" segundos. Esperamos posibles nuevos jugadores.");
-  setTimeout(cambiar_estado,time,"Empezada");
+  console.log("Hay suficientes jugadores para empezar, vamos a cambiar el estado de la partida dentro de "+tiempo_espera/1000+" segundos. Esperamos posibles nuevos jugadores.");
+  setTimeout(cambiar_estado,tiempo_espera,"Empezada");
 }
 if(EstadoPartida=="Empezada"){
   //asignar roles
@@ -165,21 +181,21 @@ if(EstadoPartida=="Empezada"){
   //contador para empezar la partida. Le pasamos el siguiente estado
   console.log("Cuenta atrás para empezar la partida: ");
   tiempo_espera=10;
-  contador(10, "Noche");
+  contador(tiempo_espera, "Noche");
 }
   if(EstadoPartida=="Noche"){
     console.log("Es de noche.");
     console.log("Los lobos votan a un aldeano para morir");
     tiempo_espera=10;
 
-    contador(10, "Dia");
+    contador(tiempo_espera, "Dia");
   }
   if (EstadoPartida=="Votaciones") {
     console.log("Es momento de votar a los lobos/ Psicopata");
     console.log("Volverá la noche");
-    tiempo_espera=10;
+    tiempo_espera=9999999;
 
-    contador(10, "Noche");
+    contador(tiempo_espera, "Noche");
   }
  if (EstadoPartida=="Dia") {
     console.log("Es de día.");
@@ -187,7 +203,7 @@ if(EstadoPartida=="Empezada"){
     console.log("Es momento de discutir");
     tiempo_espera=10;
 
-    contador(10, "Votaciones");
+    contador(tiempo_espera, "Votaciones");
   }
   //Hemos acabado, enviamos el estado de la PARTIDA
   io.sockets.emit("estado", EstadoPartida, tiempo_espera);

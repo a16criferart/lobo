@@ -38,6 +38,7 @@
 
 //==============CODIGO DE PARTIDA================
   socket.on("estado", function(EstadoPartida, tiempo){
+  $('#ContadorVotos').hide();
     var Info = document.getElementById('InfoPartida');
     //actualizamos tablero por si hay cambios
     tablero();
@@ -65,6 +66,8 @@
         console.log("Es momento de votar a los lobos/ Psicopata");
         console.log("Volverá la noche");
         Info.innerHTML = ("Es momento de votar a los lobos/ Psicopata. Volverá la noche pronto.  <div id='segundos'><br>Tiempo: 0 segundos</div>") ;
+        //==votaciones==
+        $('#ContadorVotos').show();
 
       }
      if (EstadoPartida=="Dia") {
@@ -89,7 +92,20 @@
     TiempoPartida.innerHTML = " <br>Tiempo:</b><i> "+segundos+" segundos</i>";
   });
 
+  socket.on('VotoRecibido', function(UsuarioVotado, userId, Votos){
+    var Contador=document.getElementById(UsuarioVotado).textContent;
+    document.getElementById(UsuarioVotado).textContent= Votos;
+    console.log("Voto:"+Votos);
+  });
 //======FUNCIONES!!======
+var UsuarioVotado = " ";
+function votar(e){
+    UsuarioVotado= e.getAttribute("value") ;
+    console.log("Has seleccionado "+ UsuarioVotado+" para votar");
+    socket.emit("voto", UsuarioVotado, userId);
+
+}
+
 
 function coger_rol(){
   db.collection("usuarios").where("id_usuario","==",userId)
@@ -167,8 +183,9 @@ function tablero(){
           // doc.data() is never undefined for query doc snapshots
           //console.log(doc.id, " => ", doc.data());
           //jugadores.push(doc.data());
-          trHTML += '<td><img class="avatar" src="'+ doc.data().avatar +'" alt="Avatar">'
-              + '<div class="username"><b>' + doc.data().username + '</b>(3)</div>'
+          trHTML += '<td id="TDvillager" onclick="votar(this)" value="'+doc.data().id_usuario+'" ><img class="avatar" src="'+ doc.data().avatar +'" alt="Avatar">'
+              + '<div class="username"><b>' + doc.data().username + '</b> </div>'
+              + '<div id="ContadorVotos"  style="color:red; font-weight:bold; margin-left:50px" >Votos: <span id="'+doc.data().id_usuario+'" value="0">0</span> </div>'
               + '<div class="rol">' + doc.data().rol+ '</div>'+ '</td>';
 
           if (cont==4){
@@ -201,7 +218,7 @@ function tablero(){
     render(data);
     autoscroll();
   })
-  
+
   function render (data) {
     var html = data.map(function(elem, index) {
       return(`<div>
@@ -209,18 +226,17 @@ function tablero(){
                 <em>${elem.text}</em>
               </div>`);
     }).join(" ");
-  
+
     document.getElementById('messages').innerHTML = html;
     $('#texto').val('');
   }
-  
+
   function addMessage(e) {
     var message = {
       author: username,
       text: document.getElementById('texto').value
     };
-  
+
     socket.emit('new-message', message);
     return false;
   }
-  
