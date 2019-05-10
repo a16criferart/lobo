@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-
+  
 
     <style>
       td{
@@ -75,6 +75,7 @@
         width: 45%;        
         border:solid;
         float: right;
+        
         background-color: rgba(255, 255, 255, 0.7);
       }
       input[type=text] {
@@ -83,12 +84,17 @@
       #messages{
         padding:2%;
         overflow:scroll; 
+        clear:both;
         display:flex; 
         flex-direction:column-reverse;
+      
       }
 
       #segundos{
         height: 40px;
+      }
+      #chat_noche{
+        display: none;
       }
       </style>
 </head>
@@ -108,18 +114,32 @@
 
       <div id="partida"></div>
       <div id="InfoPartida"> La partida empezará pronto. Estamos cargando los usuarios. <div id="segundos"><br>Tiempo: - segundos</div> </div>
-      <div class="chat_box">
-        <div id="messages"></div>
-       
+      <div id="chat_dia">
+        <div class="chat_box">
+          <div id="messages"></div>
+        </div>
+        <div class="message_box">
+          <form onsubmit="return addMessage(this)">
+              
+            <input type="text" id="texto" placeholder="Habla por aqui...">
+            <input type="submit" id="btnSumbit" value="Enviar!">
+
+          </form>
+        </div>
       </div>
-      <div class="message_box">
-      <form onsubmit="return addMessage(this)">
-          
-        <input type="text" id="texto" placeholder="Habla por aqui...">
-        <input type="submit" value="Enviar!">
+      <div id="chat_noche">
+        <div class="chat_box">
+        <div id="messagesN"></div>
       
-    </form>
-  </div>
+        </div>
+        <div class="message_box">
+          <form onsubmit="return addMessageN(this)">
+          
+          <input type="text" id="textoN" placeholder="Habla por aqui...">
+          <input type="submit" id="btnSumbit2" value="Enviar!">
+          </form>
+        </div>
+      </div>
     </div>
 
      
@@ -133,3 +153,8 @@
 <script src="https://www.gstatic.com/firebasejs/5.10.1/firebase.js"></script>
 <script src="/js/firebase.js"></script>
 <script src="/js/jugar.js"></script>
+<script>
+
+
+
+  </script>

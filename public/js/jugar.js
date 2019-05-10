@@ -1,5 +1,6 @@
 //==========VARIABLES===========
   var IDPartida="";
+  var estado="";
 
   //Datos de usuario
       console.log("===DATOS===");
@@ -38,6 +39,7 @@
 
 //==============CODIGO DE PARTIDA================
   socket.on("estado", function(EstadoPartida, tiempo){
+    estado = EstadoPartida;
     var Info = document.getElementById('InfoPartida');
     //actualizamos tablero por si hay cambios
     tablero();
@@ -59,7 +61,12 @@
         console.log("Es de noche.");
         console.log("Los lobos votan a un aldeano para morir");
         Info.innerHTML = ("Es de noche. Los lobos votan a un aldeano para morir.  <div id='segundos'><br>Tiempo: 0 segundos</div>");
-
+        
+        console.log(rol);
+        if (rol=="Lobo"){
+        $( "#chat_dia" ).hide();
+        $( "#chat_noche" ).show();
+        };
       }
       if (EstadoPartida=="Votaciones") {
         console.log("Es momento de votar a los lobos/ Psicopata");
@@ -72,7 +79,10 @@
         console.log("Un par de aldeanos han muerto por el  Psicopata y por los lobos");
         console.log("Es momento de discutir");
         Info.innerHTML = ("Es de día. Es momento de discutir quién es malo.  <div id='segundos'><br>Tiempo: 0 segundos</div>" ) ;
-
+        if (rol=="Lobo"){
+        $( "#chat_noche" ).hide();
+        $( "#chat_dia" ).show();
+        }
       }
 
   });
@@ -191,13 +201,12 @@ function tablero(){
 //cargar tablero
   tablero();
 
-  //chat
+  //chat DIA
   function autoscroll(){
     var objDiv = document.getElementById("messages");
     objDiv.scrollTop = objDiv.scrollHeight;
   }
   socket.on('messages', function(data) {
-    console.log(data);
     render(data);
     autoscroll();
   })
@@ -219,8 +228,50 @@ function tablero(){
       author: username,
       text: document.getElementById('texto').value
     };
-  
+    message.text = $.trim(message.text);
+    
+    if (message.text!="" && estado!="Noche"){
+
     socket.emit('new-message', message);
+    }
     return false;
   }
+
+   //chat NOCHE 
+   
+   function autoscroll(){
+    var objDiv = document.getElementById("messagesN");
+    objDiv.scrollTop = objDiv.scrollHeight;
+  }
+  socket.on('messagesN', function(data) {
+    renderN(data);
+    autoscroll();
+  })
+  
+  function renderN (data) {
+    var html = data.map(function(elem, index) {
+      return(`<div>
+                <strong>${elem.author}</strong>:
+                <em>${elem.text}</em>
+              </div>`);
+    }).join(" ");
+  
+    document.getElementById('messagesN').innerHTML = html;
+    $('#textoN').val('');
+  }
+  
+  function addMessageN(e) {
+    var messageN = {
+      author: username,
+      text: document.getElementById('textoN').value
+    };
+    messageN.text = $.trim(messageN.text);
+    
+    if (messageN.text!="" && rol=="Lobo" && estado=="Noche"){
+
+    socket.emit('new-messageN', messageN);
+    }
+    return false;
+  }
+  
   

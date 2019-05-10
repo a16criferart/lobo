@@ -124,18 +124,29 @@ console.log("El estado actual de la partida es:" +EstadoPartida);
 //SOCKET
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
-var clients = [];
-
+var messages = [];
+var messagesN = [];
 io.on('connection', function(socket) {
   socket.emit('hola', EstadoPartida, IDPartida);
 
-  socket.on("recibido", function(data){
-    if(data.valor==true){
-      console.log("Cliente nuevo recibido");
-      clients.push(socket);
-    }
-  });
+  socket.emit('messages', messages);
 
+  socket.on('new-message', function(data) {
+    
+    messages.push(data);
+
+    io.sockets.emit('messages', messages);
+  });
+  
+  socket.emit('messagesN', messagesN);
+
+  socket.on('new-messageN', function(data) {
+    
+    messagesN.push(data);
+
+    io.sockets.emit('messagesN', messagesN);
+  });
+  
 });
 
 
@@ -385,15 +396,5 @@ server.listen(8080, function() {
   console.log("Servidor corriendo en http://localhost:8080");
 });
 
-var messages = [];
 
-io.on('connection', function(socket) {
-  console.log('Alguien se ha conectado con Sockets');
-  socket.emit('messages', messages);
-
-  socket.on('new-message', function(data) {
-    messages.push(data);
-
-    io.sockets.emit('messages', messages);
-  });
-});
+ 
