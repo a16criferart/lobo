@@ -62,7 +62,7 @@
         console.log("Es de noche.");
         console.log("Los lobos votan a un aldeano para morir");
         Info.innerHTML = ("Es de noche. Los lobos votan a un aldeano para morir.  <div id='segundos'><br>Tiempo: 0 segundos</div>");
-        
+
         console.log(rol);
         if (rol=="Lobo"){
         $( "#chat_dia" ).hide();
@@ -102,10 +102,54 @@
     TiempoPartida.innerHTML = " <br>Tiempo:</b><i> "+segundos+" segundos</i>";
   });
 
-  socket.on('VotoRecibido', function(UsuarioVotado, userId, Votos){
-    var Contador=document.getElementById(UsuarioVotado).textContent;
-    document.getElementById(UsuarioVotado).textContent= Votos;
-    console.log("Voto:"+Votos);
+  //El servidor ha recibido un voto
+  socket.on('VotoRecibido', function(ArrayVotos){
+  /*
+    //Recontamos los votos
+    for (var i = 0; i < ArrayVotos.length; i++) {
+      //Cogemos la id de este usuario sin espacios
+      var id = eliminarEspacios(ArrayVotos[i]);
+      var Jugador = document.getElementById("VOTO-"+id);
+      //Num de votos actuales
+      var Votos = Jugador.innerHTML;
+        //Pasamos a int
+        var TotalVotos = parseInt(Votos, 10);
+        console.log(TotalVotos);
+      //Actualizamos el num de votos
+      Jugador.innerHTML = TotalVotos + 1 ;
+      console.log(ArrayVotos[i]);
+    }*/
+
+    //Mezclamos el array
+    ArrayVotos.sort();
+    //Ponemos los contadores a 0
+    $('span').text=0;
+    //Contamos
+    var current = null;
+    var cnt = 0;
+    for (var i = 0; i < ArrayVotos.length; i++) {
+        if (ArrayVotos[i] != current) {
+          //Coger id sin espacios del usuario votado
+          var id = eliminarEspacios(ArrayVotos[i]);
+          var Jugador = document.getElementById("VOTO-"+id);
+
+            if (cnt > 0) {
+              //mostramos su voto
+                Jugador.innerHTML=cnt;
+            }
+            current = ArrayVotos[i];
+            cnt = 1;
+        } else {
+            cnt++;
+        }
+    }
+    if (cnt > 0) {
+      Jugador.innerHTML=cnt;
+    }
+
+
+
+
   });
 //======FUNCIONES!!======
 var UsuarioVotado = " ";
@@ -176,6 +220,10 @@ function añadir_jugador (userId, username, IDPartida) {
   }
 }
 
+function eliminarEspacios(palabra){
+  return palabra.replace(/ /g, "");
+}
+
 function tablero(){
 
 
@@ -195,7 +243,7 @@ function tablero(){
           //jugadores.push(doc.data());
           trHTML += '<td id="TDvillager" onclick="votar(this)" value="'+doc.data().id_usuario+'" ><img class="avatar" src="'+ doc.data().avatar +'" alt="Avatar">'
               + '<div class="username"><b>' + doc.data().username + '</b> </div>'
-              + '<div id="ContadorVotos"  style="color:red; font-weight:bold; margin-left:50px" >Votos: <span id="'+doc.data().id_usuario+'" value="0">0</span> </div>'
+              + '<div id="ContadorVotos"  style="color:red; font-weight:bold; margin-left:50px" >Votos: <span id="VOTO-'+eliminarEspacios(doc.data().id_usuario)+'" >0 <span/> </div>'
               + '<div class="rol">' + doc.data().rol+ '</div>'+ '</td>';
 
           if (cont==4){
@@ -246,7 +294,7 @@ function tablero(){
       text: document.getElementById('texto').value
     };
     message.text = $.trim(message.text);
-    
+
     if (message.text!="" && estado!="Noche"){
 
     socket.emit('new-message', message);
@@ -254,8 +302,8 @@ function tablero(){
     return false;
   }
 
-   //chat NOCHE 
-   
+   //chat NOCHE
+
    function autoscroll(){
     var objDiv = document.getElementById("messagesN");
     objDiv.scrollTop = objDiv.scrollHeight;
@@ -264,7 +312,7 @@ function tablero(){
     renderN(data);
     autoscroll();
   })
-  
+
   function renderN (data) {
     var html = data.map(function(elem, index) {
       return(`<div>
@@ -272,23 +320,21 @@ function tablero(){
                 <em>${elem.text}</em>
               </div>`);
     }).join(" ");
-  
+
     document.getElementById('messagesN').innerHTML = html;
     $('#textoN').val('');
   }
-  
+
   function addMessageN(e) {
     var messageN = {
       author: username,
       text: document.getElementById('textoN').value
     };
     messageN.text = $.trim(messageN.text);
-    
+
     if (messageN.text!="" && rol=="Lobo" && estado=="Noche"){
 
     socket.emit('new-messageN', messageN);
     }
     return false;
   }
-  
-  

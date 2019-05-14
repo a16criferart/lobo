@@ -135,7 +135,7 @@ io.on('connection', function(socket) {
   socket.emit('messages', messages);
 
   socket.on('new-message', function(data) {
-    
+
     messages.push(data);
 
     io.sockets.emit('messages', messages);
@@ -144,7 +144,7 @@ io.on('connection', function(socket) {
   socket.emit('messagesN', messagesN);
 
   socket.on('new-messageN', function(data) {
-    
+
     messagesN.push(data);
 
     io.sockets.emit('messagesN', messagesN);
@@ -152,7 +152,8 @@ io.on('connection', function(socket) {
 
   socket.on("voto", function(UsuarioVotado, IDUser) {
     var NumVotos = 0;
-      var NumVotos2 = 0;
+    var NumVotos2 = 0;
+    var ArrayVotos = [];
     //Si es hora de votar actua:
     if(EstadoPartida == "Votaciones"){
       console.log("El usuario "+IDUser+" ha votado a "+UsuarioVotado);
@@ -161,15 +162,21 @@ io.on('connection', function(socket) {
       votos.set(IDUser, UsuarioVotado);
 
       for (var [key, value] of votos.entries() ) {
-        if(value==UsuarioVotado)
+        if(value==UsuarioVotado){
           NumVotos++;
-        if(key == UsuarioVotado)
+        }
+        if(key == UsuarioVotado){
           NumVotos2++;
+        }
+        ArrayVotos.push(value);
+
       }
+
+
 
             console.log("Tiene "+NumVotos);
                   console.log("Tiene "+NumVotos2);
-      io.sockets.emit('VotoRecibido', UsuarioVotado, IDUser, NumVotos);
+      io.sockets.emit('VotoRecibido', ArrayVotos);
     }
 
     });
