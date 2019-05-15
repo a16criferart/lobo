@@ -119,7 +119,7 @@
       Jugador.innerHTML = TotalVotos + 1 ;
       console.log(ArrayVotos[i]);
     }*/
-
+    console.log(ArrayVotos);
     //Mezclamos el array
     ArrayVotos.sort();
     //Ponemos los contadores a 0

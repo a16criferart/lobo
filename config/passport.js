@@ -106,6 +106,7 @@ module.exports = function(passport) {
                             newUser.local.usuario= req.param('usuario');
                             newUser.local.avatar = null;
                             newUser.local.email    = email;
+                            newUser.local.sexo   = req.param('gender');
                             newUser.local.password = newUser.generateHash(password);
 
                             newUser.save(function(err) {
@@ -115,7 +116,7 @@ module.exports = function(passport) {
                                 return done(null, newUser);
                             });
                           }
-                        
+
                       });
                     }
 
