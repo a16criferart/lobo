@@ -92,7 +92,7 @@ console.log("El estado actual de la partida es:" +EstadoPartida);
           //Si no los hay
           else if(usuarios.size<8  && EstadoPartida=="Pendiente")
             console.log("Aún no hay suficientes jugadores");
-          if (EstadoPartida="Empezada"){
+          if (EstadoPartida=="Empezada"){
              db.collection("usuarios").where("estado", "==", "muerto").get()
              .then(function(querySnapshot){
                querySnapshot.forEach(function(doc){
@@ -140,7 +140,7 @@ var messagesN = [];
 var votos = new Map();
 
 io.on('connection', function(socket) {
-  socket.emit('hola', EstadoPartida, IDPartida);
+  socket.emit('hola', EstadoPartida);
 
   //chat dia
   socket.emit('messages', messages);

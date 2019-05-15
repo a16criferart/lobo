@@ -1,5 +1,5 @@
 //==========VARIABLES===========
-  var IDPartida="";
+  var IDPartida=  "avKFrF5ZFS9OxrJDgAy3";
   var estado="";
 
   //Datos de usuario
@@ -19,7 +19,7 @@
   //
 
   // HA ENTRADO UN JUGADOR
-  socket.on('hola', function(EstadoPartida, id_partida) {
+  socket.on('hola', function(EstadoPartida) {
     console.log("El servidor ha recibido al usuario "+userId);
     //EL ESTADO DE LA PARTIDA?
     console.log("El estado de la partida es:  "+EstadoPartida);
