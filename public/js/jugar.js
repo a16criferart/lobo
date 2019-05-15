@@ -8,6 +8,8 @@
       console.log("id: "+userId);
       var username= $('#username').text();
       console.log("usuario: "+username);
+      var genero= $('#sexo').text();
+      console.log("Genero: "+genero);
       var rol = null;
 
   //======= FUNCIONES SOCKET =====
@@ -32,7 +34,6 @@
     else {
       check_usuario_sala(userId, IDPartida);
       //cargamos el tablero a usuarios reconectados
-      tablero();
     }
 
   })
@@ -69,7 +70,7 @@
         $( "#chat_dia" ).hide();
         $( "#chat_noche" ).show();
         };
-        
+
       }
       if (EstadoPartida=="Votaciones") {
         console.log("Es momento de votar a los lobos/ Psicopata");

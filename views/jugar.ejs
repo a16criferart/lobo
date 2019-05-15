@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-  
+
 
     <style>
       td{
@@ -72,10 +72,10 @@
       }
       .message_box{
         border:solid 1px rgba(255, 255, 255, 1);;
-        width: 45%;        
+        width: 45%;
         border:solid;
         float: right;
-        
+
         background-color: rgba(255, 255, 255, 0.7);
       }
       input[type=text] {
@@ -83,11 +83,11 @@
       }
       #messages{
         padding:2%;
-        overflow:scroll; 
+        overflow:scroll;
         clear:both;
-        display:flex; 
+        display:flex;
         flex-direction:column-reverse;
-      
+
       }
 
       #segundos{
@@ -108,7 +108,8 @@
     </div>
 
     <span id="userid" hidden> <%= user._id %></span>
-      <span id="username" hidden> <%= user.local.usuario %> </span>
+    <span id="username" hidden> <%= user.local.usuario %> </span>
+    <span id="sexo" hidden> <%= user.local.sexo %> </span>
 
     <div class="row">
 
@@ -120,7 +121,7 @@
         </div>
         <div class="message_box">
           <form onsubmit="return addMessage(this)">
-              
+
             <input type="text" id="texto" placeholder="Habla por aqui...">
             <input type="submit" id="btnSumbit" value="Enviar!">
 
@@ -130,11 +131,11 @@
       <div id="chat_noche">
         <div class="chat_box">
         <div id="messagesN"></div>
-      
+
         </div>
         <div class="message_box">
           <form onsubmit="return addMessageN(this)">
-          
+
           <input type="text" id="textoN" placeholder="Habla por aqui...">
           <input type="submit" id="btnSumbit2" value="Enviar!">
           </form>
@@ -142,10 +143,10 @@
       </div>
     </div>
 
-     
+
     </div>
-    
-    
+
+
 
 </div>
 </body>
