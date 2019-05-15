@@ -24,7 +24,7 @@
     //EL ESTADO DE LA PARTIDA?
     console.log("El estado de la partida es:  "+EstadoPartida);
     IDPartida=id_partida;
-    //SI  LA PARTIDA ESTÁ SIN EMPEZAR, LE DEJAMOS ENTRAR
+    //SI LA PARTIDA ESTÁ SIN EMPEZAR, LE DEJAMOS ENTRAR
     if(EstadoPartida=="Pendiente"){
     //EXISTIA?
     //SI NO EXISTE LO AÑADIRÁ, SINO NO
@@ -205,6 +205,12 @@ function check_usuario_sala(id_usuario, IDPartida){
 }
 
 function añadir_jugador (userId, username, IDPartida) {
+
+  var imgavatar = "http://i66.tinypic.com/10ctdhh.jpg";
+  if (genero=="Mujer"){
+    imgavatar = "http://i64.tinypic.com/xftfds.jpg";
+  }
+
   const comp = db.collection("usuarios").add({
     id_usuario: userId,
     username: username,
@@ -213,7 +219,7 @@ function añadir_jugador (userId, username, IDPartida) {
     rol: null,
     rol_visible: "Aldeano",
     votos:null,
-    avatar: "http://i66.tinypic.com/10ctdhh.jpg"
+    avatar: imgavatar
   });
   if(comp){
     console.log("Añadido");
