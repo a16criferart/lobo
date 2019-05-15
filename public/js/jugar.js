@@ -61,13 +61,14 @@
       if(EstadoPartida=="Noche"){
         console.log("Es de noche.");
         console.log("Los lobos votan a un aldeano para morir");
+        $("body").attr('class', 'noche');
         Info.innerHTML = ("Es de noche. Los lobos votan a un aldeano para morir.  <div id='segundos'><br>Tiempo: 0 segundos</div>");
-        
         console.log(rol);
         if (rol=="Lobo"){
         $( "#chat_dia" ).hide();
         $( "#chat_noche" ).show();
         };
+        
       }
       if (EstadoPartida=="Votaciones") {
         console.log("Es momento de votar a los lobos/ Psicopata");
@@ -81,6 +82,7 @@
         console.log("Es de día.");
         console.log("Un par de aldeanos han muerto por el  Psicopata y por los lobos");
         console.log("Es momento de discutir");
+        $("body").attr('class', 'dia');
         Info.innerHTML = ("Es de día. Es momento de discutir quién es malo.  <div id='segundos'><br>Tiempo: 0 segundos</div>" ) ;
         if (rol=="Lobo"){
         $( "#chat_noche" ).hide();

@@ -92,6 +92,17 @@ console.log("El estado actual de la partida es:" +EstadoPartida);
           //Si no los hay
           else if(usuarios.size<8  && EstadoPartida=="Pendiente")
             console.log("Aún no hay suficientes jugadores");
+          if (EstadoPartida="Empezada"){
+             db.collection("usuarios").where("estado", "==", "muerto").get()
+             .then(function(querySnapshot){
+               querySnapshot.forEach(function(doc){
+                 var refM =  db.collection("usuarios").doc(doc.id);
+                return refM.update({
+                  avatar: "http://i64.tinypic.com/t6w66u.jpg"
+                });
+               });
+             });
+          }
       })
       .catch(err => {
         console.log('Error getting document', err);
@@ -214,7 +225,7 @@ if(EstadoPartida=="Empezada"){
   if (EstadoPartida=="Votaciones") {
     console.log("Es momento de votar a los lobos/ Psicopata");
     console.log("Volverá la noche");
-    tiempo_espera=9999999;
+    tiempo_espera=10;
 
     contador(tiempo_espera, "Noche");
   }
