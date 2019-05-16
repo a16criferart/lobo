@@ -55,8 +55,14 @@
     if(EstadoPartida=="Empezada"){
       //contador para empezar la partida. Le pasamos el siguiente estado
       console.log("Cuenta atrás para empezar la partida. aprox:"+tiempo+" segundos");
-      Info.innerHTML = "Cuenta atrás para empezar la partida. <div id='segundos'><br>Tiempo: 0 segundos</div>";
+      Info.innerHTML = "Cuenta atrás para empezar asignar los roles y comenzar. <div id='segundos'><br>Tiempo: 0 segundos</div>";
+      
 
+    }
+    if(EstadoPartida=="Asignando"){
+      //contador para empezar la partida. Le pasamos el siguiente estado
+      console.log("Asignando roles...");
+      Info.innerHTML = "Cuenta atrás para empezar la partida. <div id='segundos'><br>Tiempo: 0 segundos</div>";
     }
       if(EstadoPartida=="Noche"){
         console.log("Es de noche.");
@@ -219,6 +225,14 @@ function check_usuario_sala(id_usuario, IDPartida){
 }
 
 function añadir_jugador (userId, username, IDPartida) {
+
+  var imgavatar = "http://i66.tinypic.com/10ctdhh.jpg";
+  genero = eliminarEspacios(genero);
+  console.log(genero);
+  if (genero=="Mujer"){
+    imgavatar = "http://i64.tinypic.com/xftfds.jpg";
+  }
+
   const comp = db.collection("usuarios").add({
     id_usuario: userId,
     username: username,
@@ -227,7 +241,7 @@ function añadir_jugador (userId, username, IDPartida) {
     rol: null,
     rol_visible: "Aldeano",
     votos:null,
-    avatar: "http://i66.tinypic.com/10ctdhh.jpg"
+    avatar: imgavatar
   });
   if(comp){
     console.log("Añadido");
@@ -243,8 +257,6 @@ function eliminarEspacios(palabra){
 }
 
 function tablero(){
-
-
 
   var trHTML = '<tr>';
   var cont=0;
