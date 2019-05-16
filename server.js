@@ -219,7 +219,11 @@ if(EstadoPartida=="Empezada"){
   asignar_roles();
   //contador para empezar la partida. Le pasamos el siguiente estado
   console.log("Cuenta atrás para empezar la partida: ");
-  tiempo_espera=10;
+  tiempo_espera=8;
+  contador(tiempo_espera, "Asignando");
+}
+if(EstadoPartida=="Asignando"){
+  tiempo_espera=3;
   contador(tiempo_espera, "Noche");
 }
   if(EstadoPartida=="Noche"){

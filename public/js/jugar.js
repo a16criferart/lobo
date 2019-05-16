@@ -55,8 +55,14 @@
     if(EstadoPartida=="Empezada"){
       //contador para empezar la partida. Le pasamos el siguiente estado
       console.log("Cuenta atrás para empezar la partida. aprox:"+tiempo+" segundos");
-      Info.innerHTML = "Cuenta atrás para empezar la partida. <div id='segundos'><br>Tiempo: 0 segundos</div>";
+      Info.innerHTML = "Cuenta atrás para empezar asignar los roles y comenzar. <div id='segundos'><br>Tiempo: 0 segundos</div>";
+      
 
+    }
+    if(EstadoPartida=="Asignando"){
+      //contador para empezar la partida. Le pasamos el siguiente estado
+      console.log("Asignando roles...");
+      Info.innerHTML = "Cuenta atrás para empezar la partida. <div id='segundos'><br>Tiempo: 0 segundos</div>";
     }
       if(EstadoPartida=="Noche"){
         console.log("Es de noche.");
@@ -236,8 +242,6 @@ function eliminarEspacios(palabra){
 }
 
 function tablero(){
-
-
 
   var trHTML = '<tr>';
   var cont=0;
