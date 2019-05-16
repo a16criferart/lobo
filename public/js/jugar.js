@@ -11,7 +11,10 @@
       var genero= $('#sexo').text();
       console.log("Genero: "+genero);
       var rol = null;
-      var accion = '';
+      var UsuarioVotado = " ";
+      let MasVotos=0;
+      let MasVotado=null;
+
   //======= FUNCIONES SOCKET =====
 
   //Conexión al servidor
@@ -56,7 +59,7 @@
       //contador para empezar la partida. Le pasamos el siguiente estado
       console.log("Cuenta atrás para empezar la partida. aprox:"+tiempo+" segundos");
       Info.innerHTML = "Cuenta atrás para empezar asignar los roles y comenzar. <div id='segundos'><br>Tiempo: 0 segundos</div>";
-      
+
     }
     if(EstadoPartida=="Asignando"){
       //contador para empezar la partida. Le pasamos el siguiente estado
@@ -65,6 +68,7 @@
       cargar_accion();
     }
       if(EstadoPartida=="Noche"){
+         socket.emit("MasVotado", MasVotado, MasVotos);
         console.log("Es de noche.");
         console.log("Los lobos votan a un aldeano para morir");
         $("body").attr('class', 'noche');
@@ -109,23 +113,6 @@
   });
 
 
-  function contarFreq(arr) {
-      var a = [], b = [], prev;
-
-      arr.sort();
-      for ( var i = 0; i < arr.length; i++ ) {
-          if ( arr[i] !== prev ) {
-              a.push(arr[i]);
-              b.push(1);
-          } else {
-              b[b.length-1]++;
-          }
-          prev = arr[i];
-      }
-
-      return [a, b];
-  }
-
   socket.on('tiempo', function(segundos) {
     var TiempoPartida = document.getElementById('segundos');
 
@@ -135,14 +122,7 @@
 
   //El servidor ha recibido un voto
   socket.on('VotoRecibido', function(ArrayVotos){
-    console.log("Entra");
-
-
     let result=contarFreq(ArrayVotos);
-    console.table(result);
-    /*
-    console.table(result[0]);
-    console.table(result[1]);*/
     //Ponemos los contadores a 0
     $('span').text("0");
 
@@ -153,12 +133,31 @@
         var NumVotos = result[1][i];
         var selecSpan = eliminarEspacios(UsuarioVotado);
         $('#'+selecSpan).text(NumVotos);
-
+        if(NumVotos>MasVotos){
+          MasVotos= NumVotos;
+          MasVotado = UsuarioVotado;
+        }
     }
-
   });
 //======FUNCIONES!!======
-var UsuarioVotado = " ";
+
+function contarFreq(arr) {
+    var a = [], b = [], prev;
+
+    arr.sort();
+    for ( var i = 0; i < arr.length; i++ ) {
+        if ( arr[i] !== prev ) {
+            a.push(arr[i]);
+            b.push(1);
+        } else {
+            b[b.length-1]++;
+        }
+        prev = arr[i];
+    }
+
+    return [a, b];
+}
+
 function votar(e){
     UsuarioVotado= e.getAttribute("value") ;
     console.log("Has seleccionado "+ UsuarioVotado+" para votar");
