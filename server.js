@@ -238,7 +238,7 @@ if(EstadoPartida=="Asignando"){
   if (EstadoPartida=="Votaciones") {
     console.log("Es momento de votar a los lobos/ Psicopata");
     console.log("Volverá la noche");
-    tiempo_espera=9999990;
+    tiempo_espera=10;
 
     contador(tiempo_espera, "Noche");
   }

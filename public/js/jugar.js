@@ -11,7 +11,7 @@
       var genero= $('#sexo').text();
       console.log("Genero: "+genero);
       var rol = null;
-
+      var accion = '';
   //======= FUNCIONES SOCKET =====
 
   //Conexión al servidor
@@ -57,12 +57,12 @@
       console.log("Cuenta atrás para empezar la partida. aprox:"+tiempo+" segundos");
       Info.innerHTML = "Cuenta atrás para empezar asignar los roles y comenzar. <div id='segundos'><br>Tiempo: 0 segundos</div>";
       
-
     }
     if(EstadoPartida=="Asignando"){
       //contador para empezar la partida. Le pasamos el siguiente estado
       console.log("Asignando roles...");
       Info.innerHTML = "Cuenta atrás para empezar la partida. <div id='segundos'><br>Tiempo: 0 segundos</div>";
+      cargar_accion();
     }
       if(EstadoPartida=="Noche"){
         console.log("Es de noche.");
@@ -168,6 +168,7 @@ function votar(e){
 
 
 function coger_rol(){
+  
   db.collection("usuarios").where("id_usuario","==",userId)
   .get()
   .then(function(querySnapshot) {
@@ -176,7 +177,6 @@ function coger_rol(){
       console.log(rol);
     })
   });
-
 }
 
 function comprobar_usuario(id_usuario, username, IDPartida){
@@ -197,6 +197,10 @@ function check_usuario_sala(id_usuario, IDPartida){
   const comp = db.collection("usuarios").where("id_usuario","==",id_usuario)
          .get().then(function(querySnapshot) {
              if(querySnapshot.size > 0){
+              querySnapshot.forEach(function(doc) {
+                rol= doc.data().rol;
+                cargar_accion();
+              });
                //alert("Procura no volver a salir de una partida en curso!!")
                Swal.fire({
                     title: '<strong>¡Aviso!</strong>',
@@ -368,3 +372,22 @@ function tablero(){
     }
     return false;
   }
+
+function cargar_accion(){
+  if (rol=="Cura")
+  var accion = '<img src="/img/cura.png" alt="Cura" height="200" width="200">'
+  if (rol=="Psicopata")
+  var accion = '<img src="/img/psicopata.png" alt="Cura" height="200" width="200">'
+  if (rol=="Pistolero")
+  var accion = '<img src="/img/pistolero.png" alt="Cura" height="200" width="200">'
+  if (rol=="Vidente")
+  var accion = '<img src="/img/vidente.png" alt="Cura" height="200" width="200">'
+  if (rol=="Hechicero")
+  var accion = '<img src="/img/hechicero.png" alt="Cura" height="200" width="200">'
+  if (rol=="Guardaespaldas")
+  var accion = '<img src="/img/guardaespaldas.png" alt="Cura" height="200" width="200">'
+  if (rol=="Doctor")
+  var accion = '<img src="/img/doctor.png" alt="Cura" height="200" width="200">'
+
+  $('#accion').html(accion);
+}
