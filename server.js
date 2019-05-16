@@ -93,7 +93,7 @@ console.log("El estado actual de la partida es:" +EstadoPartida);
           else if(usuarios.size<8  && EstadoPartida=="Pendiente")
             console.log("Aún no hay suficientes jugadores");
 
-          if (EstadoPartida=="Empezada"){
+          if (EstadoPartida!="Pendiente"){
 
             //COMPROBAR MUERTOS
              db.collection("usuarios").where("estado", "==", "muerto").get()
@@ -143,6 +143,8 @@ var io = require('socket.io')(server);
 var messages = [];
 var messagesN = [];
 var votos = new Map();
+var ArrayVotos = [];
+var ArrayMuertos= [];
 
 io.on('connection', function(socket) {
   socket.emit('hola', EstadoPartida);
@@ -166,10 +168,12 @@ io.on('connection', function(socket) {
     io.sockets.emit('messagesN', messagesN);
   });
 
+
+//Votaciones
   socket.on("voto", function(UsuarioVotado, userId) {
     var NumVotos = 0;
-    var NumVotos2 = 0;
     var ArrayVotos = [];
+    var NumVotos2 = 0;
     //Si es hora de votar actua:
     if(EstadoPartida == "Votaciones"){
       console.log("El usuario "+userId+" ha votado a "+UsuarioVotado);
@@ -187,14 +191,34 @@ io.on('connection', function(socket) {
         ArrayVotos.push(value);
 
       }
-      console.log("Tiene "+NumVotos);
-      console.log("Tiene "+NumVotos2);
       io.sockets.emit('VotoRecibido', ArrayVotos);
     }
+  });
+
+  //CONTROL DE MUERTOS
+    //Más votado
+    socket.on("MasVotado", function(MasVotado, MasVotos){
+      var UsuarioVotado=" "+MasVotado;
+      //Cambiamos su estado vivo ---> muerto
+      db.collection("usuarios").where("id_usuario", "==", MasVotado)
+        .get()
+        .then(function(querySnapshot) {
+            querySnapshot.forEach(function(doc) {
+                console.log(doc.id, " => ", doc.data());
+                // Build doc ref from doc.id
+                db.collection("usuarios").doc(doc.id).update({estado: "muerto", });
+            });
+       });
+       //Añadimos al muerto
+       ArrayMuertos.push(MasVotado);
+       //Log en el servidor
+      console.log("Se ha matado al usuario "+UsuarioVotado+" con "+MasVotos+" votos.");
 
     });
-});
 
+
+
+});
 
 
 
@@ -238,11 +262,14 @@ if(EstadoPartida=="Asignando"){
   if (EstadoPartida=="Votaciones") {
     console.log("Es momento de votar a los lobos/ Psicopata");
     console.log("Volverá la noche");
-    tiempo_espera=9999990;
+    tiempo_espera=10;
 
     contador(tiempo_espera, "Noche");
   }
  if (EstadoPartida=="Dia") {
+   //Un nuevo día, reiniciamos el array de votos
+    ArrayVotos=[];
+    console.log("Votos reiniciados");
     console.log("Es de día.");
     console.log("Un par de aldeanos han muerto por el  Psicopata y por los lobos");
     console.log("Es momento de discutir");
