@@ -34,6 +34,7 @@
       #partida{
           border: 1px solid black;
           min-height: 400px;
+          min-width: 500px;
           background: rgba(46, 46, 53, 0.5);
           /*background: rgba(141, 186, 255, 0.52);*/
           color: whitesmoke;
@@ -150,7 +151,10 @@
 
 </div>
 </body>
-
+<script src="sweetalert2.all.min.js"></script>
+<!-- Optional: include a polyfill for ES6 Promises for IE11 and Android browser -->
+<script src="https://cdn.jsdelivr.net/npm/promise-polyfill"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@8"></script>
 <script src="https://www.gstatic.com/firebasejs/5.10.1/firebase.js"></script>
 <script src="/js/firebase.js"></script>
 <script src="/js/jugar.js"></script>

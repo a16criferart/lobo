@@ -40,7 +40,7 @@
 //==============CODIGO DE PARTIDA================
   socket.on("estado", function(EstadoPartida, tiempo){
     estado = EstadoPartida;
-  $('#ContadorVotos').hide();
+    $('#ContadorVotos').hide();
     var Info = document.getElementById('InfoPartida');
     //actualizamos tablero por si hay cambios
     tablero();
@@ -92,11 +92,33 @@
       }
 
   });
+  socket.on("ActualizarTablero", function(){
+    //El servidor pide actualizar el tablero
+    tablero();
+  });
 
   socket.on("rolesAsignados", function(){
     //cogemos el rol del usuario ahora por si se ha conectado tarde
     coger_rol();
   });
+
+
+  function contarFreq(arr) {
+      var a = [], b = [], prev;
+
+      arr.sort();
+      for ( var i = 0; i < arr.length; i++ ) {
+          if ( arr[i] !== prev ) {
+              a.push(arr[i]);
+              b.push(1);
+          } else {
+              b[b.length-1]++;
+          }
+          prev = arr[i];
+      }
+
+      return [a, b];
+  }
 
   socket.on('tiempo', function(segundos) {
     var TiempoPartida = document.getElementById('segundos');
@@ -107,51 +129,26 @@
 
   //El servidor ha recibido un voto
   socket.on('VotoRecibido', function(ArrayVotos){
-  /*
-    //Recontamos los votos
-    for (var i = 0; i < ArrayVotos.length; i++) {
-      //Cogemos la id de este usuario sin espacios
-      var id = eliminarEspacios(ArrayVotos[i]);
-      var Jugador = document.getElementById("VOTO-"+id);
-      //Num de votos actuales
-      var Votos = Jugador.innerHTML;
-        //Pasamos a int
-        var TotalVotos = parseInt(Votos, 10);
-        console.log(TotalVotos);
-      //Actualizamos el num de votos
-      Jugador.innerHTML = TotalVotos + 1 ;
-      console.log(ArrayVotos[i]);
-    }*/
-    console.log(ArrayVotos);
-    //Mezclamos el array
-    ArrayVotos.sort();
+    console.log("Entra");
+
+
+    let result=contarFreq(ArrayVotos);
+    console.table(result);
+    /*
+    console.table(result[0]);
+    console.table(result[1]);*/
     //Ponemos los contadores a 0
-    $('span').text=0;
-    //Contamos
-    var current = null;
-    var cnt = 0;
-    for (var i = 0; i < ArrayVotos.length; i++) {
-        if (ArrayVotos[i] != current) {
-          //Coger id sin espacios del usuario votado
-          var id = eliminarEspacios(ArrayVotos[i]);
-          var Jugador = document.getElementById("VOTO-"+id);
+    $('span').text("0");
 
-            if (cnt > 0) {
-              //mostramos su voto
-                Jugador.innerHTML=cnt;
-            }
-            current = ArrayVotos[i];
-            cnt = 1;
-        } else {
-            cnt++;
-        }
+    for (var i = 0; i < result.length; i++) {
+        var UsuarioVotado= result[0][i];
+        console.log("EL ID" + result[0][i]);
+        console.log("NUMERO DE VOTOS" + result[1][i]);
+        var NumVotos = result[1][i];
+        var selecSpan = eliminarEspacios(UsuarioVotado);
+        $('#'+selecSpan).text(NumVotos);
+
     }
-    if (cnt > 0) {
-      Jugador.innerHTML=cnt;
-    }
-
-
-
 
   });
 //======FUNCIONES!!======
@@ -194,10 +191,28 @@ function check_usuario_sala(id_usuario, IDPartida){
   const comp = db.collection("usuarios").where("id_usuario","==",id_usuario)
          .get().then(function(querySnapshot) {
              if(querySnapshot.size > 0){
-               alert("Procura no volver a salir de una partida en curso!!")
+               //alert("Procura no volver a salir de una partida en curso!!")
+               Swal.fire({
+                    title: '<strong>¡Aviso!</strong>',
+                    type: 'warning',
+                    html:
+                      'No vuelvas a salir de una partida en curso.',
+                    confirmButtonText:
+                      '<i class="fa fa-thumbs-up"></i> ¡No volverá a ocurrir!',
+                    confirmButtonAriaLabel: '¡No volverá a ocurrir!'
+                  })
              }
              else{
-              alert("La partida ya ha empezado, no puedes unirte");
+              //alert("La partida ya ha empezado, no puedes unirte");
+              Swal.fire({
+                   title: '<strong>Opss</strong>',
+                   type: 'error',
+                   html:
+                     'No puedes unirte a una partida en curso.',
+                   confirmButtonText:
+                     '<i class="fa fa-thumbs-up"></i> Ok',
+                   confirmButtonAriaLabel: 'Ok'
+                 })
               setTimeout(4000,  location.href ="/perfil");
              }
          })
@@ -246,7 +261,7 @@ function tablero(){
           //jugadores.push(doc.data());
           trHTML += '<td id="TDvillager" onclick="votar(this)" value="'+doc.data().id_usuario+'" ><img class="avatar" src="'+ doc.data().avatar +'" alt="Avatar">'
               + '<div class="username"><b>' + doc.data().username + '</b> </div>'
-              + '<div id="ContadorVotos"  style="color:red; font-weight:bold; margin-left:50px" >Votos: <span id="VOTO-'+eliminarEspacios(doc.data().id_usuario)+'" >0 <span/> </div>'
+              + '<div id="ContadorVotos"  style="color:red; font-weight:bold; margin-left:50px" >Votos: <span id="'+eliminarEspacios(doc.data().id_usuario)+'" >0 </span> </div>'
               + '<div class="rol">' + doc.data().rol+ '</div>'+ '</td>';
 
           if (cont==4){

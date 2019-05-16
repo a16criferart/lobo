@@ -92,7 +92,10 @@ console.log("El estado actual de la partida es:" +EstadoPartida);
           //Si no los hay
           else if(usuarios.size<8  && EstadoPartida=="Pendiente")
             console.log("Aún no hay suficientes jugadores");
+
           if (EstadoPartida=="Empezada"){
+
+            //COMPROBAR MUERTOS
              db.collection("usuarios").where("estado", "==", "muerto").get()
              .then(function(querySnapshot){
                querySnapshot.forEach(function(doc){
@@ -102,6 +105,8 @@ console.log("El estado actual de la partida es:" +EstadoPartida);
                 });
                });
              });
+             //CARGAR TABLERO
+             io.sockets.emit("ActualizarTablero");
           }
       })
       .catch(err => {
@@ -161,16 +166,16 @@ io.on('connection', function(socket) {
     io.sockets.emit('messagesN', messagesN);
   });
 
-  socket.on("voto", function(UsuarioVotado, IDUser) {
+  socket.on("voto", function(UsuarioVotado, userId) {
     var NumVotos = 0;
     var NumVotos2 = 0;
     var ArrayVotos = [];
     //Si es hora de votar actua:
     if(EstadoPartida == "Votaciones"){
-      console.log("El usuario "+IDUser+" ha votado a "+UsuarioVotado);
+      console.log("El usuario "+userId+" ha votado a "+UsuarioVotado);
 
-      //IDUser es el que vota, UsuarioVotado al que votamos
-      votos.set(IDUser, UsuarioVotado);
+      //userId es el que vota, UsuarioVotado al que votamos
+      votos.set(userId, UsuarioVotado);
 
       for (var [key, value] of votos.entries() ) {
         if(value==UsuarioVotado){
@@ -182,11 +187,8 @@ io.on('connection', function(socket) {
         ArrayVotos.push(value);
 
       }
-
-
-
-            console.log("Tiene "+NumVotos);
-                  console.log("Tiene "+NumVotos2);
+      console.log("Tiene "+NumVotos);
+      console.log("Tiene "+NumVotos2);
       io.sockets.emit('VotoRecibido', ArrayVotos);
     }
 
@@ -232,7 +234,7 @@ if(EstadoPartida=="Empezada"){
   if (EstadoPartida=="Votaciones") {
     console.log("Es momento de votar a los lobos/ Psicopata");
     console.log("Volverá la noche");
-    tiempo_espera=10;
+    tiempo_espera=9999990;
 
     contador(tiempo_espera, "Noche");
   }
