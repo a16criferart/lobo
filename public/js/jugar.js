@@ -374,19 +374,19 @@ function tablero(){
 
 function cargar_accion(){
   if (rol=="Cura")
-  var accion = '<img src="/img/cura.png" alt="Cura" height="200" width="200">'
+  var accion = '<img src="/img/cura.png" alt="Cura">'
   if (rol=="Psicopata")
-  var accion = '<img src="/img/psicopata.png" alt="Cura" height="200" width="200">'
+  var accion = '<img src="/img/psicopata.png" alt="Cura"  >'
   if (rol=="Pistolero")
-  var accion = '<img src="/img/pistolero.png" alt="Cura" height="200" width="200">'
+  var accion = '<img src="/img/pistolero.png" alt="Cura"  >'
   if (rol=="Vidente")
-  var accion = '<img src="/img/vidente.png" alt="Cura" height="200" width="200">'
+  var accion = '<img src="/img/vidente.png" alt="Cura"  >'
   if (rol=="Hechicero")
-  var accion = '<img src="/img/hechicero.png" alt="Cura" height="200" width="200">'
+  var accion = '<img src="/img/hechicero.png" alt="Cura"  >'
   if (rol=="Guardaespaldas")
-  var accion = '<img src="/img/guardaespaldas.png" alt="Cura" height="200" width="200">'
+  var accion = '<img src="/img/guardaespaldas.png" alt="Cura"  >'
   if (rol=="Doctor")
-  var accion = '<img src="/img/doctor.png" alt="Cura" height="200" width="200">'
+  var accion = '<img src="/img/doctor.png" alt="Cura"  >'
 
   $('#accion').html(accion);
 }
