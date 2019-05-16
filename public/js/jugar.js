@@ -14,6 +14,8 @@
       var UsuarioVotado = " ";
       let MasVotos=0;
       let MasVotado=null;
+      var avisoMuerte=false;
+      var Muerte = false;
 
   //======= FUNCIONES SOCKET =====
 
@@ -68,9 +70,30 @@
       Info.innerHTML = "Cuenta atrás para empezar la partida. <div id='segundos'><br>Tiempo: 0 segundos</div>";
     }
       if(EstadoPartida=="Noche"){
-         socket.emit("MasVotado", MasVotado, MasVotos);
+        socket.emit("MasVotado", MasVotado, MasVotos);
+
         console.log("Es de noche.");
         console.log("Los lobos votan a un aldeano para morir");
+
+        //Comprobamos si somos nosotros quienes hemos muerto y si no hemos
+        //avisado antes
+        if(MasVotado==userId && avisoMuerte == false){
+          muerte = true;
+          avisoMuerte=true;
+          Swal.fire({
+              title: '<h1><strong>Oof!</strong></h1>',
+              html:
+                '<img src="/img/muerte.jpg" alt="Muerto" width="150px" height="170px"></img><br> ' +
+                'Has muerto...',
+              confirmButtonText:
+                '<i class="fa fa-thumbs-up"></i> Great!',
+              confirmButtonAriaLabel: 'Thumbs up, great!',
+              cancelButtonText:
+                '<i class="fa fa-thumbs-down"></i>',
+              cancelButtonAriaLabel: 'Thumbs down',
+            });
+        }
+
         $("body").attr('class', 'noche');
         Info.innerHTML = ("Es de noche. Los lobos votan a un aldeano para morir.  <div id='segundos'><br>Tiempo: 0 segundos</div>");
 
@@ -161,7 +184,9 @@ function contarFreq(arr) {
 function votar(e){
     UsuarioVotado= e.getAttribute("value") ;
     console.log("Has seleccionado "+ UsuarioVotado+" para votar");
-    socket.emit("voto", UsuarioVotado, userId);
+    if(UsuarioVotado != userId && muerte==false){
+      socket.emit("voto", UsuarioVotado, userId);
+    }
 
 }
 
