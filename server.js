@@ -140,15 +140,22 @@ console.log("El estado actual de la partida es:" +EstadoPartida);
 //SOCKET
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
+//chat
 var messages = [];
 var messagesN = [];
+//votos
 var votos = new Map();
 var ArrayVotos = [];
 var ArrayMuertos= [];
 var AuxNombreUsuarioVotado;
 var AuxNombreMasVotado;
 var CopiaAuxMasVotado;
+//roles
+var ObjetivoRol=null;
+var NombreUsuarioRol=null;
+var BalasRestantes=2;
 
+//===SOCKET===
 io.on('connection', function(socket) {
   socket.emit('hola', EstadoPartida);
 
@@ -171,8 +178,66 @@ io.on('connection', function(socket) {
     io.sockets.emit('messagesN', messagesN);
   });
 
+//========Roles=========
+//pistolero
+socket.on("Balas", function(userId, UsuarioVotado){
+  if(BalasRestantes>0){
+    //el pistolero aun tiene balas.
+    //disparamos
+    db.collection("usuarios").where("id_usuario", "==", UsuarioVotado)
+        .get()
+        .then(function(querySnapshot) {
+            querySnapshot.forEach(function(doc) {
+                //Mostramos su rol cuando muere
+                var rolvisible = doc.data().rol;
+                // Lo matamos
+                db.collection("usuarios").doc(doc.id).update({estado: "muerto", rol_visible: rolvisible});
+            });
+       });
+       //Añadimos al muerto
+       ArrayMuertos.push(UsuarioVotado);
+      //Cogemos el nombre del usuario disparado
+      sacarNombre(UsuarioVotado);
+      ObjetivoRol=AuxNombreUsuarioVotado;
+      //Cogemos el nombre del usuario que dispara
+       sacarNombre(userId);
+       NombreUsuarioRol=AuxNombreUsuarioVotado;
+       //Dejamos la var en null
+       AuxNombreUsuarioVotado=null;
+       //Si hay algun objetivo
+         if(ObjetivoRol!=null){
+             //Estructuramos el mensaje
+             var texto ="<i>El pistolero <b>"+NombreUsuarioRol+"</b> ha disparado a <b>"+ObjetivoRol+" </b></i>";
+             var msj = {
+               author: "- Servidor -",
+               text: texto
+             }
+             //Enviamos el mensaje por chat
+             messages.push(msj);
+             io.sockets.emit('messages', messages);
+             //Reiniciamos la variable de AuxNombreUsuarioVotado
+             AuxNombreUsuarioVotado="";
+         }
+    //La pistola hace mucho ruido... Revelamos su rol
+    db.collection("usuarios").where("id_usuario", "==", userId)
+        .get()
+        .then(function(querySnapshot) {
+            querySnapshot.forEach(function(doc) {
+                //Mostramos su rol cuando muere
+                var rolvisible = doc.data().rol;
+                // Lo matamos
+                db.collection("usuarios").doc(doc.id).update({rol_visible: rolvisible});
+            });
+       });
+       io.sockets.emit("ActualizarTablero");
+  }
+  else
+    //No ha ido bien o de forma esperada.
+    socket.emit("ErrorPistolero");
 
-//Votaciones
+});
+
+//========Votaciones=======
   socket.on("voto", function(UsuarioVotado, userId, username) {
     var ArrayVotos = [];
     var muerto = false;

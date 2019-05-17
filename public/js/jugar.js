@@ -37,7 +37,6 @@
     }
     else {
       check_usuario_sala(userId, IDPartida);
-      //cargamos el tablero a usuarios reconectados
     }
 
   })
@@ -80,18 +79,7 @@
         if(MasVotado==userId && avisoMuerte == false){
           Muerte = true;
           avisoMuerte=true;
-          Swal.fire({
-              title: '<h1><strong>Oof!</strong></h1>',
-              html:
-                '<img src="/img/muerte.jpg" alt="Muerto" width="150px" height="170px"></img><br> ' +
-                'Has muerto...',
-              confirmButtonText:
-                '<i class="fa fa-thumbs-up"></i> Great!',
-              confirmButtonAriaLabel: 'Thumbs up, great!',
-              cancelButtonText:
-                '<i class="fa fa-thumbs-down"></i>',
-              cancelButtonAriaLabel: 'Thumbs down',
-            });
+          avisoDeMuerte();
         }
 
         $("body").attr('class', 'noche');
@@ -299,7 +287,6 @@ function añadir_jugador (userId, username, IDPartida) {
   });
   if(comp){
     console.log("Añadido");
-    tablero();
   }
   else{
     console.log("Error al añadir");
@@ -311,10 +298,15 @@ function eliminarEspacios(palabra){
 }
 
 function tablero(){
-
+  //Comprobamos si hay muertos sin avisar en el refresh
+  if(avisoMuerte==false && Muerte==true){
+      avisoMuerte==true;
+      avisoDeMuerte();
+  }
+  //Tablero
   var trHTML = '<tr>';
   var cont=0;
-  $('#partida').empty();
+  $('#partida').html("");
   db.collection("usuarios")
   .get()
   .then(function(querySnapshot) {
@@ -339,7 +331,7 @@ function tablero(){
 
 
       //console.log(jugadores[0].avatar);
-      $('#partida').append(trHTML);
+      $('#partida').html(trHTML);
   })
   .catch(function(error) {
       console.log("Error getting documents: ", error);
@@ -456,4 +448,19 @@ function accion_rol () {
     socket.emit("Balas", userId, UsuarioVotado);
   }
 
+}
+
+function avisoDeMuerte(){
+  Swal.fire({
+      title: '<h1><strong>Oof!</strong></h1>',
+      html:
+        '<img src="/img/muerte.jpg" alt="Muerto" width="150px" height="170px"></img><br> ' +
+        'Has muerto...',
+      confirmButtonText:
+        '<i class="fa fa-thumbs-up"></i> Great!',
+      confirmButtonAriaLabel: 'Thumbs up, great!',
+      cancelButtonText:
+        '<i class="fa fa-thumbs-down"></i>',
+      cancelButtonAriaLabel: 'Thumbs down',
+    });
 }
