@@ -349,7 +349,7 @@ function tablero(){
 
   socket.on('messages', function(data) {
     render(data);
-    autoscroll();
+    
   })
 
   function render (data) {
@@ -382,7 +382,7 @@ function tablero(){
 
   socket.on('messagesN', function(data) {
     renderN(data);
-    autoscroll();
+   
   })
 
   function renderN (data) {
