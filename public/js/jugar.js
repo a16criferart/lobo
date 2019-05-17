@@ -319,7 +319,7 @@ function tablero(){
           trHTML += '<td id="TDvillager" onclick="votar(this)" value="'+doc.data().id_usuario+'" ><img class="avatar" src="'+ doc.data().avatar +'" alt="Avatar">'
               + '<div class="username"><b>' + doc.data().username + '</b> </div>'
               + '<div id="ContadorVotos"  style="color:red; font-weight:bold; margin-left:50px" >Votos: <span id="'+eliminarEspacios(doc.data().id_usuario)+'" >0 </span> </div>'
-              + '<div class="rol">' + doc.data().rol+ '</div>'+ '</td>';
+              + '<div class="rol">' + doc.data().rol_visible+ '</div>'+ '</td>';
 
           if (cont==4){
               trHTML += '<tr>'
