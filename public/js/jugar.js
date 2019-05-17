@@ -78,7 +78,7 @@
         //Comprobamos si somos nosotros quienes hemos muerto y si no hemos
         //avisado antes
         if(MasVotado==userId && avisoMuerte == false){
-          muerte = true;
+          Muerte = true;
           avisoMuerte=true;
           Swal.fire({
               title: '<h1><strong>Oof!</strong></h1>',
@@ -182,22 +182,39 @@ function contarFreq(arr) {
 }
 
 function votar(e){
+  //Cogemos el usuario votado
     UsuarioVotado= e.getAttribute("value") ;
     //console.log("Has seleccionado "+ UsuarioVotado+" para votar");
-    //Votaciones
-    if(UsuarioVotado != userId && Muerte==false && EstadoPartida=="Votaciones"){
-      socket.emit("voto", UsuarioVotado, userId);
-    }
     //Accion vidente
     if (UsuarioVotado != userId && Muerte==false && EstadoPartida=="Noche" && rol=="Vidente"){
       accion_rol();
     }
 
-}
+    //Esta muerto?
+    if(Muerte==false){
+      //Nos estamos votando a nosotros mismos?
+      if(UsuarioVotado != userId && EstadoPartida=="Votaciones")
+      //Enviamos el voto al servidor
+        socket.emit("voto", UsuarioVotado, userId, username);
+        //Alertas de error vvv
+      else
+        Swal.fire({
+          type: 'error',
+          title: 'Oops...',
+          text: 'No puedes votarte a ti mismo'
+        })
+    }
+    else
+      Swal.fire({
+        type: 'error',
+        title: 'Oops...',
+        text: '¿Estás intentando votar estando muerto?'
+      })
+  }
 
 
 function coger_rol(){
-  
+
   db.collection("usuarios").where("id_usuario","==",userId)
   .get()
   .then(function(querySnapshot) {
@@ -354,7 +371,7 @@ function tablero(){
     };
     message.text = $.trim(message.text);
 
-    if (message.text!="" && estado!="Noche"){
+    if (message.text!="" && estado!="Noche" && Muerte==false){
 
     socket.emit('new-message', message);
     }

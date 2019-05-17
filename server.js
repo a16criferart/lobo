@@ -145,6 +145,9 @@ var messagesN = [];
 var votos = new Map();
 var ArrayVotos = [];
 var ArrayMuertos= [];
+var AuxNombreUsuarioVotado;
+var AuxNombreMasVotado;
+var CopiaAuxMasVotado;
 
 io.on('connection', function(socket) {
   socket.emit('hola', EstadoPartida);
@@ -170,28 +173,40 @@ io.on('connection', function(socket) {
 
 
 //Votaciones
-  socket.on("voto", function(UsuarioVotado, userId) {
-    var NumVotos = 0;
+  socket.on("voto", function(UsuarioVotado, userId, username) {
     var ArrayVotos = [];
-    var NumVotos2 = 0;
+    var muerto = false;
     //Si es hora de votar actua:
-    if(EstadoPartida == "Votaciones"){
+    if(ArrayMuertos.includes(UsuarioVotado) )
+      muerto = true;
+
+    if(EstadoPartida == "Votaciones" && muerto == false){
       console.log("El usuario "+userId+" ha votado a "+UsuarioVotado);
 
       //userId es el que vota, UsuarioVotado al que votamos
       votos.set(userId, UsuarioVotado);
 
       for (var [key, value] of votos.entries() ) {
-        if(value==UsuarioVotado){
-          NumVotos++;
-        }
-        if(key == UsuarioVotado){
-          NumVotos2++;
-        }
         ArrayVotos.push(value);
-
       }
+      
+      //Enviamos el voto a los clientes
       io.sockets.emit('VotoRecibido', ArrayVotos);
+      //Cogemos el nombre del usuario votado
+      sacarNombre(UsuarioVotado);
+      if(AuxNombreUsuarioVotado!=null){
+          //Estructuramos el mensaje
+          var texto ="<i>El usuario <b>"+username+"</b> ha votado a <b>"+AuxNombreUsuarioVotado+" </b></i>";
+          var msj = {
+            author: "- Servidor -",
+            text: texto
+          }
+          //Enviamos el mensaje por chat
+          messages.push(msj);
+          io.sockets.emit('messages', messages);
+          //Reiniciamos la variable de AuxNombreUsuarioVotado
+          AuxNombreUsuarioVotado="";
+      }
     }
   });
 
@@ -214,6 +229,27 @@ io.on('connection', function(socket) {
        //Log en el servidor
       console.log("Se ha matado al usuario "+UsuarioVotado+" con "+MasVotos+" votos.");
 
+      //Sacamos el usuario
+      sacarNombre(MasVotado);
+      AuxNombreMasVotado=AuxNombreUsuarioVotado;
+      AuxNombreUsuarioVotado=null;
+      //Si alguien ha sido linchado...
+      if(AuxNombreMasVotado!=null && AuxNombreMasVotado!=CopiaAuxMasVotado){
+        //Mensaje en el chat
+        var msj = {
+          author: "- Servidor -",
+          text: "<h5><b>"+AuxNombreMasVotado +" ha sido linchado hoy.</h5></b>"
+        }
+        //Enviamos el mensaje por chat
+        messages.push(msj);
+        io.sockets.emit('messages', messages);
+        //Reiniciamos la variable de AuxNombreUsuarioVotado
+        AuxNombreUsuarioVotado="";
+        //Guardamos el ultimo linchado
+        CopiaAuxMasVotado=AuxNombreMasVotado;
+      }
+
+
     });
 
 
@@ -223,6 +259,17 @@ io.on('connection', function(socket) {
 
 
 // FUNCIONES ======================================================================
+function sacarNombre(id){
+    //Sacamos el nombre de usuario en firebase a partir de la id
+    db.collection("usuarios").where("id_usuario", "==", id)
+      .get()
+      .then(function(querySnapshot) {
+          querySnapshot.forEach(function(doc) {
+           AuxNombreUsuarioVotado=doc.data().username;
+          });
+     });
+}
+
 function manejar_estado(){
   var tiempo_espera="";
 
