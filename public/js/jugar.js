@@ -423,17 +423,17 @@ function cargar_accion(){
   if (rol=="Cura")
   var accion = '<img src="/img/cura.png" alt="Cura">'
   if (rol=="Psicopata")
-  var accion = '<img src="/img/psicopata.png" alt="Cura"  >'
+  var accion = '<img src="/img/psicopata.png" alt="Psicopata"  >'
   if (rol=="Pistolero")
-  var accion = '<img src="/img/pistolero.png" alt="Cura"  >'
+  var accion = '<img src="/img/pistolero.png" alt="Pistolero"  >'
   if (rol=="Vidente")
-  var accion = '<img src="/img/vidente.png" alt="Cura"  >'
+  var accion = '<img src="/img/vidente.png" alt="Vidente"  >'
   if (rol=="Hechicero")
-  var accion = '<img src="/img/hechicero.png" alt="Cura"  >'
+  var accion = '<img src="/img/hechicero.png" alt="Hechicero"  >'
   if (rol=="Guardaespaldas")
-  var accion = '<img src="/img/guardaespaldas.png" alt="Cura"  >'
+  var accion = '<img src="/img/guardaespaldas.png" alt="Guardaespaldas"  >'
   if (rol=="Doctor")
-  var accion = '<img src="/img/doctor.png" alt="Cura"  >'
+  var accion = '<img src="/img/doctor.png" alt="Doctor"  >'
 
   $('#accion').html(accion);
 }
