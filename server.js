@@ -189,7 +189,7 @@ io.on('connection', function(socket) {
       for (var [key, value] of votos.entries() ) {
         ArrayVotos.push(value);
       }
-      
+
       //Enviamos el voto a los clientes
       io.sockets.emit('VotoRecibido', ArrayVotos);
       //Cogemos el nombre del usuario votado
@@ -220,8 +220,10 @@ io.on('connection', function(socket) {
         .then(function(querySnapshot) {
             querySnapshot.forEach(function(doc) {
                 console.log(doc.id, " => ", doc.data());
+                var rolvisible = doc.data().rol;
+
                 // Build doc ref from doc.id
-                db.collection("usuarios").doc(doc.id).update({estado: "muerto", });
+                db.collection("usuarios").doc(doc.id).update({estado: "muerto", rol_visible: rolvisible});
             });
        });
        //Añadimos al muerto

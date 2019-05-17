@@ -188,11 +188,13 @@ function votar(e){
   //Cogemos el usuario votado
     UsuarioVotado= e.getAttribute("value") ;
     //console.log("Has seleccionado "+ UsuarioVotado+" para votar");
-    //Accion vidente
-    if (UsuarioVotado != userId && Muerte==false && estado=="Noche" && rol=="Vidente" && accion==true){
-      accion_rol();
+    //Acciones de rol
+    if (UsuarioVotado != userId && Muerte==false && accion==true){
+      if(rol=="Vidente" && estado=="Noche")
+        accion_rol();
+      else if(rol=="Pistolero" || rol=="Cura" && estado!="Noche")
+        accion_rol();
     }
-
     //Esta muerto?
     if(Muerte==false){
       //Nos estamos votando a nosotros mismos?
@@ -326,13 +328,13 @@ function tablero(){
           trHTML += '<td id="TDvillager" onclick="votar(this)" value="'+doc.data().id_usuario+'" ><img class="avatar" src="'+ doc.data().avatar +'" alt="Avatar">'
               + '<div class="username"><b>' + doc.data().username + '</b> </div>'
               + '<div id="ContadorVotos"  style="color:red; font-weight:bold; margin-left:50px" >Votos: <span id="'+eliminarEspacios(doc.data().id_usuario)+'" >0 </span> </div>'
-              + '<div id="rol'+cont+'" class="rol">' + doc.data().rol+ '</div>'+ '</td>';
+              + '<div class="rol">' + doc.data().rol_visible+ '</div>'+ '</td>';
 
           if (cont==4){
               trHTML += '<tr>'
               cont=0;
           }
-          
+
 
       });
 
@@ -352,7 +354,7 @@ function tablero(){
 
   socket.on('messages', function(data) {
     render(data);
-    
+
   })
 
   function render (data) {
@@ -385,7 +387,7 @@ function tablero(){
 
   socket.on('messagesN', function(data) {
     renderN(data);
-   
+
   })
 
   function renderN (data) {
@@ -449,7 +451,9 @@ function accion_rol () {
         
         console.log(rolvisto);
         accionVidente=false;
-
+  }
+  if(rol=="Pistolero"){
+    socket.emit("Balas", userId, UsuarioVotado);
   }
 
 }
