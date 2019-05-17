@@ -185,11 +185,13 @@ function votar(e){
   //Cogemos el usuario votado
     UsuarioVotado= e.getAttribute("value") ;
     //console.log("Has seleccionado "+ UsuarioVotado+" para votar");
-    //Accion vidente
-    if (UsuarioVotado != userId && Muerte==false && EstadoPartida=="Noche" && rol=="Vidente"){
-      accion_rol();
+    //Acciones de rol
+    if (UsuarioVotado != userId && Muerte==false && accion==true){
+      if(rol=="Vidente" && estado=="Noche")
+        accion_rol();
+      else if(rol=="Pistolero" || rol=="Cura" && estado!="Noche")
+        accion_rol();
     }
-
     //Esta muerto?
     if(Muerte==false){
       //Nos estamos votando a nosotros mismos?
@@ -447,7 +449,9 @@ function accion_rol () {
         console.log(tdobjetivo)
         $( tdobjetivo ).html( "caraculo" );
         accionVidente=false;
-
+  }
+  if(rol=="Pistolero"){
+    socket.emit("Balas", userId, UsuarioVotado);
   }
 
 }
