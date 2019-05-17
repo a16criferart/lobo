@@ -16,6 +16,8 @@
       let MasVotado=null;
       var avisoMuerte=false;
       var Muerte = false;
+      var accion = false;
+      var accionVidente = false;
 
   //======= FUNCIONES SOCKET =====
 
@@ -68,6 +70,7 @@
       console.log("Asignando roles...");
       Info.innerHTML = "Cuenta atrás para empezar la partida. <div id='segundos'><br>Tiempo: 0 segundos</div>";
       cargar_accion();
+      accionVidente=true;
     }
       if(EstadoPartida=="Noche"){
         socket.emit("MasVotado", MasVotado, MasVotos);
@@ -186,14 +189,14 @@ function votar(e){
     UsuarioVotado= e.getAttribute("value") ;
     //console.log("Has seleccionado "+ UsuarioVotado+" para votar");
     //Accion vidente
-    if (UsuarioVotado != userId && Muerte==false && EstadoPartida=="Noche" && rol=="Vidente"){
+    if (UsuarioVotado != userId && Muerte==false && estado=="Noche" && rol=="Vidente" && accion==true){
       accion_rol();
     }
 
     //Esta muerto?
     if(Muerte==false){
       //Nos estamos votando a nosotros mismos?
-      if(UsuarioVotado != userId && EstadoPartida=="Votaciones")
+      if(UsuarioVotado != userId && estado=="Votaciones")
       //Enviamos el voto al servidor
         socket.emit("voto", UsuarioVotado, userId, username);
         //Alertas de error vvv
@@ -430,22 +433,21 @@ function cargar_accion(){
 
   $('#accion').html(accion);
 }
-
+function accion(){
+  accion=true;
+}
 function accion_rol () {
-  var tdcount=0;
-  var tdobjetivo="";
+    var rolvisto=""
   //accion vidente
   if (rol=="Vidente" && accionVidente==true){
     db.collection("usuarios").where("id_usuario","==",UsuarioVotado)
          .get().then(function(querySnapshot) {
             querySnapshot.forEach(function(doc) {               
-                tdcount++;
                 rolvisto = doc.data().rol;
             });
           });
-        var tdobjetivo ='#'+rol+tdcount;
-        console.log(tdobjetivo)
-        $( tdobjetivo ).html( "caraculo" );  
+        
+        console.log(rolvisto);
         accionVidente=false;
 
   }
