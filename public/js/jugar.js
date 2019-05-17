@@ -11,7 +11,7 @@
       var genero= $('#sexo').text();
       console.log("Genero: "+genero);
       var rol = null;
-      var UsuarioVotado = " ";
+      var UsuarioVotado = "";
       let MasVotos=0;
       let MasVotado=null;
       var avisoMuerte=false;
@@ -184,11 +184,16 @@ function contarFreq(arr) {
 function votar(e){
   //Cogemos el usuario votado
     UsuarioVotado= e.getAttribute("value") ;
-    console.log("Has seleccionado "+ UsuarioVotado+" para votar");
+    //console.log("Has seleccionado "+ UsuarioVotado+" para votar");
+    //Accion vidente
+    if (UsuarioVotado != userId && Muerte==false && EstadoPartida=="Noche" && rol=="Vidente"){
+      accion_rol();
+    }
+
     //Esta muerto?
     if(Muerte==false){
       //Nos estamos votando a nosotros mismos?
-      if(UsuarioVotado != userId)
+      if(UsuarioVotado != userId && EstadoPartida=="Votaciones")
       //Enviamos el voto al servidor
         socket.emit("voto", UsuarioVotado, userId, username);
         //Alertas de error vvv
@@ -315,7 +320,6 @@ function tablero(){
           cont++;
           // doc.data() is never undefined for query doc snapshots
           //console.log(doc.id, " => ", doc.data());
-          //jugadores.push(doc.data());
           trHTML += '<td id="TDvillager" onclick="votar(this)" value="'+doc.data().id_usuario+'" ><img class="avatar" src="'+ doc.data().avatar +'" alt="Avatar">'
               + '<div class="username"><b>' + doc.data().username + '</b> </div>'
               + '<div id="ContadorVotos"  style="color:red; font-weight:bold; margin-left:50px" >Votos: <span id="'+eliminarEspacios(doc.data().id_usuario)+'" >0 </span> </div>'
@@ -325,7 +329,7 @@ function tablero(){
               trHTML += '<tr>'
               cont=0;
           }
-          //console.log(doc.data().avatar)
+
 
       });
 
@@ -342,13 +346,10 @@ function tablero(){
   tablero();
 
   //chat DIA
-  function autoscroll(){
-    var objDiv = document.getElementById("messages");
-    objDiv.scrollTop = objDiv.scrollHeight;
-  }
+
   socket.on('messages', function(data) {
     render(data);
-    autoscroll();
+
   })
 
   function render (data) {
@@ -379,13 +380,9 @@ function tablero(){
 
    //chat NOCHE
 
-   function autoscroll(){
-    var objDiv = document.getElementById("messagesN");
-    objDiv.scrollTop = objDiv.scrollHeight;
-  }
   socket.on('messagesN', function(data) {
     renderN(data);
-    autoscroll();
+
   })
 
   function renderN (data) {
@@ -406,7 +403,7 @@ function tablero(){
       text: document.getElementById('textoN').value
     };
     messageN.text = $.trim(messageN.text);
-
+    //solo si es lobo
     if (messageN.text!="" && rol=="Lobo" && estado=="Noche"){
 
     socket.emit('new-messageN', messageN);
@@ -414,6 +411,7 @@ function tablero(){
     return false;
   }
 
+// carga el div de la accion que tiene su personaje
 function cargar_accion(){
   if (rol=="Cura")
   var accion = '<img src="/img/cura.png" alt="Cura">'
@@ -431,4 +429,25 @@ function cargar_accion(){
   var accion = '<img src="/img/doctor.png" alt="Cura"  >'
 
   $('#accion').html(accion);
+}
+
+function accion_rol () {
+  var tdcount=0;
+  var tdobjetivo="";
+  //accion vidente
+  if (rol=="Vidente" && accionVidente==true){
+    db.collection("usuarios").where("id_usuario","==",UsuarioVotado)
+         .get().then(function(querySnapshot) {
+            querySnapshot.forEach(function(doc) {
+                tdcount++;
+                rolvisto = doc.data().rol;
+            });
+          });
+        var tdobjetivo ='#'+rol+tdcount;
+        console.log(tdobjetivo)
+        $( tdobjetivo ).html( "caraculo" );
+        accionVidente=false;
+
+  }
+
 }
