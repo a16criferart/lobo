@@ -230,6 +230,8 @@ socket.on("Balas", function(userId, UsuarioVotado){
             });
        });
        io.sockets.emit("ActualizarTablero");
+       //le quitamos una bala
+       BalasRestantes--;
   }
   else
     //No ha ido bien o de forma esperada.

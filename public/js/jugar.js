@@ -183,11 +183,12 @@ function votar(e){
     //Esta muerto?
     if(Muerte==false){
       //Nos estamos votando a nosotros mismos?
-      if(UsuarioVotado != userId)
-      //Se puede votar?
-        if(estado=="Votaciones")
-        //Enviamos el voto al servidor
-          socket.emit("voto", UsuarioVotado, userId, username);
+      if(UsuarioVotado != userId){
+        //Se puede votar?
+          if(estado=="Votaciones")
+          //Enviamos el voto al servidor
+            socket.emit("voto", UsuarioVotado, userId, username);
+      }
         //Alertas de error vvv
       else
         Swal.fire({
