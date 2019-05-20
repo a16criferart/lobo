@@ -18,6 +18,7 @@
       var Muerte = false;
       var accion = false;
       var accionVidente = false;
+      var rolvisto="";
 
   //======= FUNCIONES SOCKET =====
 
@@ -70,11 +71,12 @@
       console.log("Asignando roles...");
       Info.innerHTML = "Cuenta atrás para empezar la partida. <div id='segundos'><br>Tiempo: 0 segundos</div>";
       cargar_accion();
-      accionVidente=true;
+      
     }
       if(EstadoPartida=="Noche"){
+        
         socket.emit("MasVotado", MasVotado, MasVotos);
-
+        accionVidente=true;
         console.log("Es de noche.");
         console.log("Los lobos votan a un aldeano para morir");
 
@@ -190,7 +192,7 @@ function votar(e){
     //console.log("Has seleccionado "+ UsuarioVotado+" para votar");
     //Acciones de rol
     if (UsuarioVotado != userId && Muerte==false && accion==true){
-      if(rol=="Vidente" && estado=="Noche")
+      if(rol=="Vidente" && estado=="Noche" && accionVidente==true)
         accion_rol();
       else if(rol=="Pistolero" || rol=="Cura" && estado!="Noche")
         accion_rol();
@@ -198,19 +200,20 @@ function votar(e){
     //Esta muerto?
     if(Muerte==false){
       //Nos estamos votando a nosotros mismos?
-      if(UsuarioVotado != userId)
+      if(estado=="Votaciones"){
       //Se puede votar?
-        if(estado=="Votaciones")
+        if(UsuarioVotado != userId)
         //Enviamos el voto al servidor
           socket.emit("voto", UsuarioVotado, userId, username);
-        //Alertas de error vvv
-      else
-        Swal.fire({
-          type: 'error',
-          title: 'Oops...',
-          text: 'No puedes votarte a ti mismo'
+        else //Alertas de error vvv
+          Swal.fire({
+            type: 'error',
+            title: 'Oops...',
+            text: 'No puedes votarte a ti mismo'
         })
+      }
     }
+    //Alertas de error vvv
     else
       Swal.fire({
         type: 'error',
@@ -437,22 +440,37 @@ function cargar_accion(){
 
   $('#accion').html(accion);
 }
-function accion(){
+function accion_on(){
+  if (accion==true){
+    accion=false;
+    console.log(accion);
+  }
+  else {
   accion=true;
+  console.log(accion);
+  }
+  
 }
 function accion_rol () {
-    var rolvisto=""
+  rolvisto="";
   //accion vidente
-  if (rol=="Vidente" && accionVidente==true){
+  console.log(UsuarioVotado)
+  if (rol=="Vidente"){
     db.collection("usuarios").where("id_usuario","==",UsuarioVotado)
-         .get().then(function(querySnapshot) {
-            querySnapshot.forEach(function(doc) {               
+         .get().then(function(usuari) {
+            usuari.forEach(function(doc) {
+                console.log(doc.data().rol);               
                 rolvisto = doc.data().rol;
+                
             });
           });
         
+        if (rolvisto=="")
+        console.log("aun no sa rellenao");
+        else 
         console.log(rolvisto);
         accionVidente=false;
+
   }
   if(rol=="Pistolero"){
     socket.emit("Balas", userId, UsuarioVotado);
