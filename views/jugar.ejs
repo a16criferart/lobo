@@ -52,20 +52,27 @@
       .noche{
         background-image: url("/img/fondo_noche.jpg");
       }
+      /*Contador*/
       #InfoPartida{
         padding: 1px;
         border:solid;
         width: 45%;
         background-color: rgba(220, 220, 220, 0.8);
         border: 2px solid rgb(255, 151, 15);
-        float: right;
         overflow: hidden;
         text-align: center;
         border-radius: 25px;
-        margin: 2px;
+        margin: 3px;
         font-weight: bold;
         font-size: 15px;
+        position:relative;
+        left:30%;
       }
+
+      #segundos{
+        height: 40px;
+      }
+      /*Chat*/
       .chat_box{
         border:solid;
         width: 45%;
@@ -90,16 +97,10 @@
         flex-direction:column-reverse;
 
       }
-
-      #segundos{
-        height: 40px;
-      }
       #chat_noche{
         display: none;
       }
-      #accion{
-        float: right;
-      }
+
       input[type=text] {
       width: 80%;
       padding: 5px 5px;
@@ -116,17 +117,25 @@
       border: none;
       border-radius: 4px;
       cursor: pointer;
-      
+
     }
 
     button[type=submit]:hover {
       background-color: rgb(100, 100, 100);
     }
+
+    /*Roles*/
+    .rolContainer{
+      margin-top: -5%;
+      margin-right: 5%;
+      width: 30%;
+      float: right;
+    }
     #accion{
+      float: right;
       height: 100px;
       width: 100px;
       border-radius: 100px;
-      margin-right: 20%;
     }
     #accion img{
       width:100%;
@@ -135,27 +144,58 @@
     #accion:hover{
       border: 2px solid red;
       opacity: 0.7;
-      
+
+    }
+    .rolBox{
+      margin-top: 10%;
+      padding: 5px;
+      text-align: center;
+      border-radius: 25px;
+      min-width: 65%;
+      max-width: 65%;
+      overflow: hidden;
+      float: left;
+      font-weight: bold;
+      background-color: rgba(220, 220, 220, 0.8);
+      border: 2px solid rgb(255, 151, 15);
+      font-size: 15px;
     }
       </style>
 </head>
 <body class="dia">
+
 <div class="container">
 
-    <div class="page-header text-center">
-        <h1><i class="fab fa-wolf-pack-battalion"></i> Jugar</h1>
-        <a href="/perfil" class="btn btn-default btn-sm">Perfil</a>
-        <a href="/logout" class="btn btn-default btn-sm">Logout</a>
+  <div class="row">
+     <div class="col-sm ">
+       <!--Nav -->
+       <div class="page-header text-center">
+           <h1><i class="fab fa-wolf-pack-battalion"></i> Jugar</h1>
+           <a href="/perfil" class="btn btn-default btn-sm">Perfil</a>
+           <a href="/logout" class="btn btn-default btn-sm">Logout</a>
+       </div>
+       <!-- Vars ocultas-->
+       <span id="userid" hidden> <%= user._id %></span>
+       <span id="username" hidden> <%= user.local.usuario %> </span>
+       <span id="sexo" hidden> <%= user.local.sexo %> </span>
+     </div>
+</div>
+
+  <div class="row ">
+    <!-- Contador-->
+    <div  class="col-xs-12" id="InfoPartida">
+      <div class="center-block"> La partida empezará pronto. Estamos cargando los usuarios. <div id="segundos"><br>Tiempo: - segundos</div></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-sm">
+      <!-- Tablero-->
+      <div id="partida"></div>
     </div>
 
-    <span id="userid" hidden> <%= user._id %></span>
-    <span id="username" hidden> <%= user.local.usuario %> </span>
-    <span id="sexo" hidden> <%= user.local.sexo %> </span>
-
-    <div class="row">
-
-      <div id="partida"></div>
-      <div id="InfoPartida"> La partida empezará pronto. Estamos cargando los usuarios. <div id="segundos"><br>Tiempo: - segundos</div> </div>
+    <div class="col-sm">
+      <!-- Chats -->
       <div id="chat_dia">
         <div class="chat_box">
           <div id="messages"></div>
@@ -187,7 +227,16 @@
 
     </div>
 
+<div class="row rolContainer">
+    <div class="rolBox">
+        Tu rol es: fkdpskf
+      </div>
+      <!-- Roles -->
+        <div id="accion"></div>
 </div>
+
+</div>
+
 </body>
 <script src="sweetalert2.all.min.js"></script>
 <!-- Optional: include a polyfill for ES6 Promises for IE11 and Android browser -->
