@@ -70,10 +70,10 @@
       console.log("Asignando roles...");
       Info.innerHTML = "Cuenta atrás para empezar la partida. <div id='segundos'><br>Tiempo: 0 segundos</div>";
       cargar_accion();
-      
+
     }
       if(EstadoPartida=="Noche"){
-        
+
         socket.emit("MasVotado", MasVotado, MasVotos);
         accionVidente=true;
         console.log("Es de noche.");
@@ -128,6 +128,9 @@
     coger_rol();
   });
 
+  socket.on("alerta", function(){
+    alert("HOLA")
+  });
 
   socket.on('tiempo', function(segundos) {
     var TiempoPartida = document.getElementById('segundos');
@@ -178,12 +181,14 @@ function votar(e){
   //Cogemos el usuario votado
     UsuarioVotado= e.getAttribute("value") ;
     //console.log("Has seleccionado "+ UsuarioVotado+" para votar");
-    //Acciones de rol
-    if (UsuarioVotado != userId && Muerte==false && accion==true){
-      if(rol=="Vidente" && estado=="Noche" && accionVidente==true)
-        accion_rol();
-      else if(rol=="Pistolero" || rol=="Cura" && estado!="Noche")
-        accion_rol();
+    if(accion==true){
+      //Acciones de rol
+      if (UsuarioVotado != userId && Muerte==false && accion==true){
+        if(rol=="Vidente" && estado=="Noche" && accionVidente==true)
+          accion_rol();
+        else if(rol=="Pistolero" || rol=="Cura" && estado!="Noche")
+          accion_rol();
+      }
     }
     //Esta muerto?
     if(Muerte==false){
@@ -303,6 +308,7 @@ function eliminarEspacios(palabra){
   return palabra.replace(/ /g, "");
 }
 
+//=================TABLERO==================
 function tablero(){
   //Comprobamos si hay muertos sin avisar en el refresh
   if(avisoMuerte==false && Muerte==true){
@@ -347,6 +353,7 @@ function tablero(){
 //cargar tablero
   tablero();
 
+//======CHAT======
   //chat DIA
 
   socket.on('messages', function(data) {
@@ -413,6 +420,7 @@ function tablero(){
     return false;
   }
 
+//============ROLES===============
 // carga el div de la accion que tiene su personaje
 function cargar_accion(){
   if (rol=="Cura")
@@ -441,34 +449,48 @@ function accion_on(){
   accion=true;
   console.log(accion);
   }
-  
+
 }
 function accion_rol () {
   rolvisto="";
   //accion vidente
-  console.log(UsuarioVotado)
-  if (rol=="Vidente"){
-    db.collection("usuarios").where("id_usuario","==",UsuarioVotado)
-         .get().then(function(usuari) {
-            usuari.forEach(function(doc) {
-                console.log(doc.data().rol);               
-                rolvisto = doc.data().rol;
-                
-            });
-          });
-        
-        if (rolvisto=="")
-        console.log("aun no sa rellenao");
-        else 
-        console.log(rolvisto);
-        accionVidente=false;
-
+  if(rol=="Vidente"){
+      verRolVidente();
+      setTimeout(pintarRolVidente, 1000);
   }
+  //accion pistolero
   if(rol=="Pistolero"){
+    accion=false;
     socket.emit("Balas", userId, UsuarioVotado);
   }
 
 }
+
+/*ACCIONES Y UTILIDADES DE ROL */
+
+function verRolVidente(){
+  db.collection("usuarios").where("id_usuario","==",UsuarioVotado)
+       .get().then(function(usuari) {
+          usuari.forEach(function(doc) {
+              rolvisto = doc.data().rol;
+
+          });
+        });
+}
+
+function pintarRolVidente(){
+  if(rolvisto=="")
+    console.log("Algo ha ido mal");
+  else{
+    //console.log(rolvisto);
+    accion=false;
+    accionVidente=false;
+    avisoRol();
+  }
+}
+
+
+//==========ALERTS===========
 
 function avisoDeMuerte(){
   Swal.fire({
@@ -483,4 +505,26 @@ function avisoDeMuerte(){
         '<i class="fa fa-thumbs-down"></i>',
       cancelButtonAriaLabel: 'Thumbs down',
     });
+}
+function avisoRol(){
+  var    titulo="<h1>El rol visto es...</h1><br>";
+  var    txt="<h2>"+rolvisto+"</h2><br>";
+  var equipo="Pertenece al equipo aldea";
+  if (rolvisto=="Lobo") {
+    equipo="Pertenece al equipo de los lobos. ¡Matarlo!";
+  }
+  else if (rolvisto=="Psicopata") {
+    equipo="Pertenece al equipo de los malos. ¡Matarlo!";
+  }
+  else if (rolvisto=="Bufon") {
+    equipo="Es un bufón ¡no se le puede votar o ganará!";
+  }
+
+  Swal.fire({
+    title: titulo,
+    html: txt+equipo,
+    confirmButtonText:
+      '<i class="fa fa-thumbs-up"></i> Ok!'
+  });
+
 }

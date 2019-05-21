@@ -179,6 +179,7 @@ io.on('connection', function(socket) {
   });
 
 //========Roles=========
+
 //pistolero
 socket.on("Balas", function(userId, UsuarioVotado){
   if(BalasRestantes>0){
