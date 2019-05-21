@@ -181,7 +181,7 @@ io.on('connection', function(socket) {
 //========Roles=========
 
 //pistolero
-socket.on("Balas", function(userId, UsuarioVotado){
+socket.on("Balas", function(userId, UsuarioVotado, username){
   //el pistolero aun tiene balas?
   if(BalasRestantes!=0){
     //disparamos
@@ -192,16 +192,12 @@ socket.on("Balas", function(userId, UsuarioVotado){
     AuxNombreUsuarioVotado="";
     sacarNombre(UsuarioVotado);
     ObjetivoRol=AuxNombreUsuarioVotado;
-    //Cogemos el nombre del usuario que dispara
-     AuxNombreUsuarioVotado="";
-     sacarNombre(userId);
-     NombreUsuarioRol=AuxNombreUsuarioVotado;
      //Dejamos la var en null
      AuxNombreUsuarioVotado=null;
      //Si hay algun objetivo
          if(ObjetivoRol!=null){
              //Estructuramos el mensaje
-             var texto ="<i>El pistolero <b>"+NombreUsuarioRol+"</b> ha disparado a <b>"+ObjetivoRol+" </b></i>";
+             var texto ="<i>El pistolero <b>"+username+"</b> ha disparado a <b>"+ObjetivoRol+" </b></i>";
              var msj = {
                author: "- Servidor -",
                text: texto

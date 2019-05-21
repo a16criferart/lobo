@@ -210,6 +210,19 @@ function votar(e){
             text: 'No puedes votarte a ti mismo'
         })
       }
+      if(estado=="Noche" && rol=="Lobo"){
+        //Nos votamos a nosotros mismos?
+          if(UsuarioVotado != userId){
+            //Enviamos el voto al servidor
+              socket.emit("votoLobo", UsuarioVotado, userId, username);
+            else //Alertas de error vvv
+              Swal.fire({
+                type: 'error',
+                title: 'Oops...',
+                text: 'No puedes votarte a ti mismo'
+            })
+      }
+
     }
     //Alertas de error vvv
     else
@@ -483,7 +496,7 @@ function accion_rol () {
   //accion pistolero
   if(rol=="Pistolero"){
     accion=false;
-    socket.emit("Balas", userId, UsuarioVotado);
+    socket.emit("Balas", userId, UsuarioVotado, username);
   }
 
 }
