@@ -3,6 +3,16 @@
   var estado="";
 
   //Datos de usuario
+  var rol = null;
+  var UsuarioVotado = "";
+  let MasVotos=0;
+  let MasVotado=null;
+  var avisoMuerte=false;
+  var Muerte = false;
+  var accion = false;
+  var accionVidente = false;
+  var rolvisto="";
+
       console.log("===DATOS===");
       const userId= $('#userid').text();
       console.log("id: "+userId);
@@ -10,15 +20,10 @@
       console.log("usuario: "+username);
       var genero= $('#sexo').text();
       console.log("Genero: "+genero);
-      var rol = null;
-      var UsuarioVotado = "";
-      let MasVotos=0;
-      let MasVotado=null;
-      var avisoMuerte=false;
-      var Muerte = false;
-      var accion = false;
-      var accionVidente = false;
-      var rolvisto="";
+      //comprobamos que el usuario no esté muerto
+      comprobarMuerte();
+      console.log("Estado:"+Muerte);
+
 
   //======= FUNCIONES SOCKET =====
 
@@ -308,11 +313,28 @@ function eliminarEspacios(palabra){
   return palabra.replace(/ /g, "");
 }
 
+function comprobarMuerte(){
+  db.collection("usuarios").where("id_usuario","==",userId)
+    .get().then(function(querySnapshot) {
+       if(querySnapshot.size > 0){
+        querySnapshot.forEach(function(doc) {
+          if(doc.data().estado=="muerto"){
+            Muerte=true;
+          }
+      });
+    }
+  });
+  sleep(900);
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 //=================TABLERO==================
 function tablero(){
   //Comprobamos si hay muertos sin avisar en el refresh
   if(avisoMuerte==false && Muerte==true){
-      avisoMuerte==true;
+      avisoMuerte=true;
       avisoDeMuerte();
   }
   //Tablero
@@ -499,11 +521,7 @@ function avisoDeMuerte(){
         '<img src="/img/muerte.jpg" alt="Muerto" width="150px" height="170px"></img><br> ' +
         'Has muerto...',
       confirmButtonText:
-        '<i class="fa fa-thumbs-up"></i> Great!',
-      confirmButtonAriaLabel: 'Thumbs up, great!',
-      cancelButtonText:
-        '<i class="fa fa-thumbs-down"></i>',
-      cancelButtonAriaLabel: 'Thumbs down',
+        '<i class="fa fa-thumbs-up"></i>Ok...',
     });
 }
 function avisoRol(){
