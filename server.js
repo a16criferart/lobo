@@ -154,6 +154,8 @@ var CopiaAuxMasVotado;
 var ObjetivoRol=null;
 var NombreUsuarioRol=null;
 var BalasRestantes=2;
+var AguaBendita=true;
+var CargaHechicero=true;
 
 //===SOCKET===
 io.on('connection', function(socket) {
@@ -181,34 +183,23 @@ io.on('connection', function(socket) {
 //========Roles=========
 
 //pistolero
-socket.on("Balas", function(userId, UsuarioVotado){
-  if(BalasRestantes>0){
-    //el pistolero aun tiene balas.
+socket.on("Balas", function(userId, UsuarioVotado, username){
+  //el pistolero aun tiene balas?
+  if(BalasRestantes!=0){
     //disparamos
-    db.collection("usuarios").where("id_usuario", "==", UsuarioVotado)
-        .get()
-        .then(function(querySnapshot) {
-            querySnapshot.forEach(function(doc) {
-                //Mostramos su rol cuando muere
-                var rolvisible = doc.data().rol;
-                // Lo matamos
-                db.collection("usuarios").doc(doc.id).update({estado: "muerto", rol_visible: rolvisible});
-            });
-       });
-       //Añadimos al muerto
-       ArrayMuertos.push(UsuarioVotado);
-      //Cogemos el nombre del usuario disparado
-      sacarNombre(UsuarioVotado);
-      ObjetivoRol=AuxNombreUsuarioVotado;
-      //Cogemos el nombre del usuario que dispara
-       sacarNombre(userId);
-       NombreUsuarioRol=AuxNombreUsuarioVotado;
-       //Dejamos la var en null
-       AuxNombreUsuarioVotado=null;
-       //Si hay algun objetivo
+    MatarUsuario(UsuarioVotado);
+    //Añadimos al muerto
+    ArrayMuertos.push(UsuarioVotado);
+    //Cogemos el nombre del usuario disparado
+    AuxNombreUsuarioVotado="";
+    sacarNombre(UsuarioVotado);
+    ObjetivoRol=AuxNombreUsuarioVotado;
+     //Dejamos la var en null
+     AuxNombreUsuarioVotado=null;
+     //Si hay algun objetivo
          if(ObjetivoRol!=null){
              //Estructuramos el mensaje
-             var texto ="<i>El pistolero <b>"+NombreUsuarioRol+"</b> ha disparado a <b>"+ObjetivoRol+" </b></i>";
+             var texto ="<i>El pistolero <b>"+username+"</b> ha disparado a <b>"+ObjetivoRol+" </b></i>";
              var msj = {
                author: "- Servidor -",
                text: texto
@@ -220,16 +211,8 @@ socket.on("Balas", function(userId, UsuarioVotado){
              AuxNombreUsuarioVotado="";
          }
     //La pistola hace mucho ruido... Revelamos su rol
-    db.collection("usuarios").where("id_usuario", "==", userId)
-        .get()
-        .then(function(querySnapshot) {
-            querySnapshot.forEach(function(doc) {
-                //Mostramos su rol cuando muere
-                var rolvisible = doc.data().rol;
-                // Lo matamos
-                db.collection("usuarios").doc(doc.id).update({rol_visible: rolvisible});
-            });
-       });
+      revelarRol(userId);
+       //actualizamos los tableros
        io.sockets.emit("ActualizarTablero");
        //le quitamos una bala
        BalasRestantes--;
@@ -237,6 +220,43 @@ socket.on("Balas", function(userId, UsuarioVotado){
   else
     //No ha ido bien o de forma esperada.
     socket.emit("ErrorPistolero");
+
+});
+
+socket.on("RevealHechicero", function(UsuarioVotado){
+  //el pistolero aun tiene balas?
+  if(CargaHechicero==true){
+
+    AuxNombreUsuarioVotado="";
+    
+    sacarNombre(UsuarioVotado);
+    ObjetivoRol=AuxNombreUsuarioVotado;
+      //Reiniciamos la variable de AuxNombreUsuarioVotado
+    AuxNombreUsuarioVotado="";
+    
+     revelarRol(UsuarioVotado);
+     //Si hay algun objetivo
+         if(ObjetivoRol!=null){
+             //Estructuramos el mensaje
+             var texto ="<i>El hechicero ha revelado a <b>"+ObjetivoRol+"</b></i>";
+             var msj = {
+               author: "- Servidor -",
+               text: texto
+             }
+             //Enviamos el mensaje por chat
+             messages.push(msj);
+             io.sockets.emit('messages', messages);
+
+         }
+
+       //actualizamos los tableros
+       io.sockets.emit("ActualizarTablero");
+       //le quitamos la carga
+       CargaHechicero=false;
+  }
+  else
+    //No ha ido bien o de forma esperada.
+    socket.emit("ErrorHechicero");
 
 });
 
@@ -283,17 +303,7 @@ socket.on("Balas", function(userId, UsuarioVotado){
     socket.on("MasVotado", function(MasVotado, MasVotos){
       var UsuarioVotado=" "+MasVotado;
       //Cambiamos su estado vivo ---> muerto
-      db.collection("usuarios").where("id_usuario", "==", MasVotado)
-        .get()
-        .then(function(querySnapshot) {
-            querySnapshot.forEach(function(doc) {
-                console.log(doc.id, " => ", doc.data());
-                var rolvisible = doc.data().rol;
-
-                // Build doc ref from doc.id
-                db.collection("usuarios").doc(doc.id).update({estado: "muerto", rol_visible: rolvisible});
-            });
-       });
+      MatarUsuario(MasVotado);
        //Añadimos al muerto
        ArrayMuertos.push(MasVotado);
        //Log en el servidor
@@ -303,6 +313,7 @@ socket.on("Balas", function(userId, UsuarioVotado){
       sacarNombre(MasVotado);
       AuxNombreMasVotado=AuxNombreUsuarioVotado;
       AuxNombreUsuarioVotado=null;
+
       //Si alguien ha sido linchado...
       if(AuxNombreMasVotado!=null && AuxNombreMasVotado!=CopiaAuxMasVotado){
         //Mensaje en el chat
@@ -319,18 +330,49 @@ socket.on("Balas", function(userId, UsuarioVotado){
         CopiaAuxMasVotado=AuxNombreMasVotado;
       }
 
-
     });
 
- 
 
-
-
+//fin sockets
 });
 
 
 
 // FUNCIONES ======================================================================
+function revelarRol(Usuario){
+  db.collection("usuarios").where("id_usuario", "==", Usuario)
+      .get()
+      .then(function(querySnapshot) {
+          querySnapshot.forEach(function(doc) {
+              //Mostramos su rol cuando muere
+              var rolvisible = doc.data().rol;
+              // Lo matamos
+              db.collection("usuarios").doc(doc.id).update({rol_visible: rolvisible});
+          });
+     });
+     setTimeout(function() {
+         console.log('Tiempo de espera por seguiridad (revelar un rol)');
+     }, 200);
+}
+
+function MatarUsuario(Usuario){
+  db.collection("usuarios").where("id_usuario", "==", Usuario)
+    .get()
+    .then(function(querySnapshot) {
+        querySnapshot.forEach(function(doc) {
+            console.log(doc.id, " => ", doc.data());
+            var rolvisible = doc.data().rol;
+
+            // Build doc ref from doc.id
+            db.collection("usuarios").doc(doc.id).update({estado: "muerto", rol_visible: rolvisible});
+        });
+   });
+
+   setTimeout(function() {
+       console.log('Tiempo de espera por seguiridad (Matar usuario)');
+   }, 200);
+}
+
 function sacarNombre(id){
     //Sacamos el nombre de usuario en firebase a partir de la id
     db.collection("usuarios").where("id_usuario", "==", id)
@@ -340,6 +382,10 @@ function sacarNombre(id){
            AuxNombreUsuarioVotado=doc.data().username;
           });
      });
+
+     setTimeout(function() {
+         console.log('Tiempo de espera por seguiridad (coger nombre)');
+     }, 200);
 }
 
 function manejar_estado(){

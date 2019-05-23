@@ -3,6 +3,16 @@
   var estado="";
 
   //Datos de usuario
+  var rol = null;
+  var UsuarioVotado = "";
+  let MasVotos=0;
+  let MasVotado=null;
+  var avisoMuerte=false;
+  var Muerte = false;
+  var accion = false;
+  var accionVidente = false;
+  var rolvisto="";
+
       console.log("===DATOS===");
       const userId= $('#userid').text();
       console.log("id: "+userId);
@@ -10,15 +20,10 @@
       console.log("usuario: "+username);
       var genero= $('#sexo').text();
       console.log("Genero: "+genero);
-      var rol = null;
-      var UsuarioVotado = "";
-      let MasVotos=0;
-      let MasVotado=null;
-      var avisoMuerte=false;
-      var Muerte = false;
-      var accion = false;
-      var accionVidente = false;
-      var rolvisto="";
+      //comprobamos que el usuario no esté muerto
+      comprobarMuerte();
+      console.log("Estado:"+Muerte);
+
 
   //======= FUNCIONES SOCKET =====
 
@@ -186,8 +191,10 @@ function votar(e){
       if (UsuarioVotado != userId && Muerte==false && accion==true){
         if(rol=="Vidente" && estado=="Noche" && accionVidente==true)
           accion_rol();
-        else if(rol=="Pistolero" || rol=="Cura" && estado!="Noche" && accion==true)
+        else if((rol=="Pistolero" || rol=="Cura" || rol =="Hechicero" )&& estado!="Noche" && accion==true)
           accion_rol();
+          
+        
       }
     }
     //Esta muerto?
@@ -205,6 +212,20 @@ function votar(e){
             text: 'No puedes votarte a ti mismo'
         })
       }
+      if(estado=="Noche" && rol=="Lobo"){
+        //Nos votamos a nosotros mismos?
+          if(UsuarioVotado != userId){
+            //Enviamos el voto al servidor
+              socket.emit("votoLobo", UsuarioVotado, userId, username);
+          }
+            else //Alertas de error vvv
+              Swal.fire({
+                type: 'error',
+                title: 'Oops...',
+                text: 'No puedes votarte a ti mismo'
+            })
+      }
+
     }
     //Alertas de error vvv
     else
@@ -308,11 +329,28 @@ function eliminarEspacios(palabra){
   return palabra.replace(/ /g, "");
 }
 
+function comprobarMuerte(){
+  db.collection("usuarios").where("id_usuario","==",userId)
+    .get().then(function(querySnapshot) {
+       if(querySnapshot.size > 0){
+        querySnapshot.forEach(function(doc) {
+          if(doc.data().estado=="muerto"){
+            Muerte=true;
+          }
+      });
+    }
+  });
+  sleep(900);
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 //=================TABLERO==================
 function tablero(){
   //Comprobamos si hay muertos sin avisar en el refresh
   if(avisoMuerte==false && Muerte==true){
-      avisoMuerte==true;
+      avisoMuerte=true;
       avisoDeMuerte();
   }
   //Tablero
@@ -461,12 +499,12 @@ function accion_rol () {
   //accion pistolero
   if(rol=="Pistolero"){
     accion=false;
-    socket.emit("Balas", userId, UsuarioVotado);
+    socket.emit("Balas", userId, UsuarioVotado, username);
   }
-  //accion cura
-  if(rol=="Cura"){
+  //accion hechicero
+  if(rol=="Hechicero"){
     accion=false;
-    socket.emit("AguaBendita", userId, UsuarioVotado);
+    socket.emit("RevealHechicero", UsuarioVotado);
   }
 
 }
@@ -504,11 +542,7 @@ function avisoDeMuerte(){
         '<img src="/img/muerte.jpg" alt="Muerto" width="150px" height="170px"></img><br> ' +
         'Has muerto...',
       confirmButtonText:
-        '<i class="fa fa-thumbs-up"></i> Great!',
-      confirmButtonAriaLabel: 'Thumbs up, great!',
-      cancelButtonText:
-        '<i class="fa fa-thumbs-down"></i>',
-      cancelButtonAriaLabel: 'Thumbs down',
+        '<i class="fa fa-thumbs-up"></i>Ok...',
     });
 }
 function avisoRol(){
