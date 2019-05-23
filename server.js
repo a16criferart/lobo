@@ -423,7 +423,7 @@ socket.on("Cuchillada", function(UsuarioVotado){
       console.log("El lobo "+userId+" ha votado a "+UsuarioVotado+" para que muera esta noche");
 
       //userId es el que vota, UsuarioVotado al que votamos
-      votosLobo.set(userId, UsuarioVotado);
+      votos.set(userId, UsuarioVotado);
 
       for (var [key, value] of votos.entries() ) {
         ArrayVotosLobo.push(value);
@@ -458,7 +458,6 @@ socket.on("Cuchillada", function(UsuarioVotado){
   //CONTROL DE MUERTOS
   //Más votado
   socket.on("MasVotado", function(MasVotado, MasVotos){
-    votos.clear();
     var UsuarioVotado=" "+MasVotado;
     //Cambiamos su estado vivo ---> muerto
     MatarUsuario(MasVotado);
@@ -492,10 +491,11 @@ socket.on("Cuchillada", function(UsuarioVotado){
       //actualizamos tablero
       socket.emit("ActualizarTablero");
 
+        votos.clear();
+
   });
   //Más votado de los lobos
   socket.on("MasVotadoLobos", function(MasVotadoLobos, MasVotosLobos){
-    votosLobo.clear();
     var UsuarioVotado=" "+MasVotadoLobos;
     //Cambiamos su estado vivo ---> muerto
     MatarUsuario(MasVotadoLobos);
@@ -525,6 +525,8 @@ socket.on("Cuchillada", function(UsuarioVotado){
       io.sockets.emit('messages', messages);
       //Guardamos el ultimo linchado
       CopiaAuxMasVotado=nombre;
+      
+        votos.clear();
 
 
     //actualizamos tablero
