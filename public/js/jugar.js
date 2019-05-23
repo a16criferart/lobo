@@ -5,6 +5,8 @@
   //Datos de usuario
   var rol = null;
   var UsuarioVotado = "";
+  var VotacionesHechas=false;
+  var VotacionesHechasLobo= false;
   let MasVotos=0;
   let MasVotado=null;
   let MasVotosLobos=0;
@@ -16,6 +18,7 @@
   var rolvisto="";
   var ArrayLobosCliente = [];
   var asesinado;
+
 
       console.log("===DATOS===");
       const userId= $('#userid').text();
@@ -85,8 +88,12 @@
 
     }
       if(EstadoPartida=="Noche"){
-        //Enviamos al servidor el usuario que ha sido mas votado
-        socket.emit("MasVotado", MasVotado, MasVotos);
+        if(VotacionesHechas==true){
+          //Enviamos al servidor el usuario que ha sido mas votado
+          socket.emit("MasVotado", MasVotado, MasVotos);
+          VotacionesHechas=false;
+        }
+
         //Comprobamos si somos nosotros quienes hemos muerto y si no hemos avisado antes
         if(MasVotado==userId && avisoMuerte == false){
           Muerte = true;
@@ -123,8 +130,11 @@
 
       }
      if (EstadoPartida=="Dia") {
-       //Enviamos al servidor el usuario que ha sido matado por los lobos
-       socket.emit("MasVotadoLobos", MasVotadoLobos, MasVotosLobos);
+       if(VotacionesHechasLobo==true){
+         //Enviamos al servidor el usuario que ha sido matado por los lobos
+         socket.emit("MasVotadoLobos", MasVotadoLobos, MasVotosLobos);
+         VotacionesHechasLobo=false;
+       }
        //Comprobamos si somos nosotros quienes hemos muerto y si no hemos avisado antes
        if(MasVotadoLobos==userId || asesinado==userId && avisoMuerte == false){
          Muerte = true;
@@ -225,9 +235,11 @@ function votar(e){
       //Nos estamos votando a nosotros mismos?
       if(estado=="Votaciones"){
       //Se puede votar?
-        if(UsuarioVotado != userId)
-        //Enviamos el voto al servidor
-          socket.emit("voto", UsuarioVotado, userId, username);
+        if(UsuarioVotado != userId){
+          //Enviamos el voto al servidor
+            socket.emit("voto", UsuarioVotado, userId, username);
+            VotacionesHechas=true;
+        }
         else //Alertas de error vvv
           Swal.fire({
             type: 'error',
@@ -241,6 +253,7 @@ function votar(e){
       if(estado=="Noche" && rol=="Lobo"){
         //Nos votamos a nosotros mismos?
           if(UsuarioVotado != userId){
+            VotacionesHechasLobo=true;
             //Enviamos el voto al servidor
               socket.emit("votoLobo", UsuarioVotado, userId, username);
             }
