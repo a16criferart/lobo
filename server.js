@@ -162,6 +162,7 @@ var BalasRestantes=2;
 var CargaHechicero=true;
 var AguaBendita=1;
 var cuchillada=true;
+var IdBufon=null;
 //===SOCKET===
 io.on('connection', function(socket) {
   socket.emit('hola', EstadoPartida);
@@ -191,6 +192,16 @@ socket.on("EnviarLobo", function(userId){
   //Hemos recibido la id de un lobo, la guardamos en el array
   if(ArrayLobos.includes(userId))
     ArrayLobos.push(userId);
+});
+
+//Bufon
+
+//Bufón recibido en el cliente, avisa al servidor
+socket.on("EnviarBufon", function(userId){
+  //Aguardamos el Bufón
+  IdBufon=userId;
+  //Lo enviamos a los clientes
+  io.sockets.emit("DevolverBufon", IdBufon)
 });
 
 //pistolero
@@ -525,7 +536,7 @@ socket.on("Cuchillada", function(UsuarioVotado){
       io.sockets.emit('messages', messages);
       //Guardamos el ultimo linchado
       CopiaAuxMasVotado=nombre;
-      
+
         votos.clear();
 
 
@@ -534,6 +545,11 @@ socket.on("Cuchillada", function(UsuarioVotado){
 
   });
 
+
+//====FIN DE PARTIDA====
+socket.on("FinalizarPartida", function(){
+  EstadoPartida="Finalizada"
+});
 //fin sockets
 });
 
@@ -596,6 +612,16 @@ function sacarNombre(id){
 }
 
 function manejar_estado(){
+  if(EstadoPartida=="Finalizada"){
+    console.log("La partida ha acabado<<<<<<<<<<");
+    //Borramos los usuarios en esta sala
+    var deleteDoc = db.collection('usuarios').doc(IDPartida).delete();
+    //La marcamos como finalizada
+    var partida = db.collection('partida').doc(IDPartida);
+    // Set the 'capital' field of the city
+    var updateSingle = partida.update({estado: "Pendiente"});
+    return;
+  }
   var tiempo_espera="";
 
   if(EstadoPartida=="Pendiente"){
@@ -731,11 +757,11 @@ function asignar_roles(){
       -Pistolero
       - Psicópata
       -Cura
-      -Bufon
+      -Bufón
       -Doctor
       */
   else if (NumUsuarios==10) {
-    Roles = ["Lobo", "Lobo", "Lobo", "Vidente", "Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufon"];
+    Roles = ["Lobo", "Lobo", "Lobo", "Vidente", "Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufón"];
     shuffle_rols(Roles);
 
   }
@@ -747,12 +773,12 @@ function asignar_roles(){
       -Pistolero
       - Psicópata
       -Cura
-      -Bufon
+      -Bufón
       -Doctor
       -Guardaespaldas
       */
   else if (NumUsuarios==11) {
-    Roles = ["Lobo", "Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufon", "Guardaespaldas"];
+    Roles = ["Lobo", "Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufón", "Guardaespaldas"];
     shuffle_rols(Roles);
 
   }
@@ -763,11 +789,11 @@ function asignar_roles(){
       -Pistolero
       - Psicópata
       -Cura
-      -Bufon
+      -Bufón
       -Doctor
       -Guardaespaldas*/
   else if(NumUsuarios==12){
-    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufon", "Guardaespaldas"];
+    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufón", "Guardaespaldas"];
     shuffle_rols(Roles);
 
   }
@@ -778,13 +804,13 @@ function asignar_roles(){
   -Pistolero
   - Psicópata
   -Cura
-  -bufon
+  -Bufón
   - Doctor
   - Hechicero (revela 1 vez el rol a todos)
   -Guardaespaldas
   */
   else if (NumUsuarios==13) {
-    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufon", "Guardaespaldas", "Hechicero"];
+    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufón", "Guardaespaldas", "Hechicero"];
     shuffle_rols(Roles);
 
   }
@@ -793,17 +819,17 @@ function asignar_roles(){
         El resto son aldeanos
   */
   else if (NumUsuarios==14) {
-    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufon", "Guardaespaldas", "Hechicero", "Aldeano"];
+    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufón", "Guardaespaldas", "Hechicero", "Aldeano"];
     shuffle_rols(Roles);
 
   }
   else if (NumUsuarios==15) {
-    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufon", "Guardaespaldas", "Hechicero", "Aldeano", "Aldeano"];
+    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufón", "Guardaespaldas", "Hechicero", "Aldeano", "Aldeano"];
     shuffle_rols(Roles);
 
   }
   else if (NumUsuarios==16) {
-    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufon", "Guardaespaldas", "Aldeano", "Hechicero", "Aldeano","Aldeano"];
+    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufón", "Guardaespaldas", "Aldeano", "Hechicero", "Aldeano","Aldeano"];
     shuffle_rols(Roles);
 
   }
