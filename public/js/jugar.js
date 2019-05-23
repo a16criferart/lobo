@@ -186,7 +186,7 @@ function votar(e){
       if (UsuarioVotado != userId && Muerte==false && accion==true){
         if(rol=="Vidente" && estado=="Noche" && accionVidente==true)
           accion_rol();
-        else if(rol=="Pistolero" || rol=="Cura" && estado!="Noche")
+        else if(rol=="Pistolero" || rol=="Cura" && estado!="Noche" && accion==true)
           accion_rol();
       }
     }
@@ -462,6 +462,11 @@ function accion_rol () {
   if(rol=="Pistolero"){
     accion=false;
     socket.emit("Balas", userId, UsuarioVotado);
+  }
+  //accion cura
+  if(rol=="Cura"){
+    accion=false;
+    socket.emit("AguaBendita", userId, UsuarioVotado);
   }
 
 }

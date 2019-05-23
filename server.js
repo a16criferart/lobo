@@ -198,11 +198,9 @@ socket.on("Balas", function(userId, UsuarioVotado){
        //Añadimos al muerto
        ArrayMuertos.push(UsuarioVotado);
       //Cogemos el nombre del usuario disparado
-      AuxNombreUsuarioVotado="";
       sacarNombre(UsuarioVotado);
       ObjetivoRol=AuxNombreUsuarioVotado;
       //Cogemos el nombre del usuario que dispara
-       AuxNombreUsuarioVotado="";
        sacarNombre(userId);
        NombreUsuarioRol=AuxNombreUsuarioVotado;
        //Dejamos la var en null
@@ -220,8 +218,6 @@ socket.on("Balas", function(userId, UsuarioVotado){
              io.sockets.emit('messages', messages);
              //Reiniciamos la variable de AuxNombreUsuarioVotado
              AuxNombreUsuarioVotado="";
-             //Mensaje por Servidor
-             console.log("El pistolero ha gastado una bala. Le quedan "+BalasRestantes);
          }
     //La pistola hace mucho ruido... Revelamos su rol
     db.collection("usuarios").where("id_usuario", "==", userId)
@@ -326,7 +322,7 @@ socket.on("Balas", function(userId, UsuarioVotado){
 
     });
 
-    //========ROLES==========
+ 
 
 
 
