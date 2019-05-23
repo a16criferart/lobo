@@ -145,17 +145,21 @@ var messages = [];
 var messagesN = [];
 //votos
 var votos = new Map();
+var votosPiscopata = new Map();
+var votosLobo = new Map();
 var ArrayVotos = [];
+var ArrayVotosLobo = [];
 var ArrayMuertos= [];
 var AuxNombreUsuarioVotado;
 var AuxNombreMasVotado;
 var CopiaAuxMasVotado;
 //roles
+var ArrayLobos = [];
 var ObjetivoRol=null;
 var NombreUsuarioRol=null;
 var BalasRestantes=2;
-var AguaBendita=true;
 var CargaHechicero=true;
+var AguaBendita=1;
 
 //===SOCKET===
 io.on('connection', function(socket) {
@@ -181,6 +185,12 @@ io.on('connection', function(socket) {
   });
 
 //========Roles=========
+//Lobo
+socket.on("EnviarLobo", function(userId){
+  //Hemos recibido la id de un lobo, la guardamos en el array
+  if(ArrayLobos.includes(userId))
+    ArrayLobos.push(userId);
+});
 
 //pistolero
 socket.on("Balas", function(userId, UsuarioVotado, username){
@@ -209,13 +219,15 @@ socket.on("Balas", function(userId, UsuarioVotado, username){
              io.sockets.emit('messages', messages);
              //Reiniciamos la variable de AuxNombreUsuarioVotado
              AuxNombreUsuarioVotado="";
+             //le quitamos una bala
+             BalasRestantes--;
+             //Mensaje por Servidor
+             console.log("El pistolero ha gastado una bala. Le quedan "+BalasRestantes);
          }
     //La pistola hace mucho ruido... Revelamos su rol
       revelarRol(userId);
        //actualizamos los tableros
        io.sockets.emit("ActualizarTablero");
-       //le quitamos una bala
-       BalasRestantes--;
   }
   else
     //No ha ido bien o de forma esperada.
@@ -224,7 +236,7 @@ socket.on("Balas", function(userId, UsuarioVotado, username){
 });
 
 socket.on("RevealHechicero", function(UsuarioVotado){
-  //el pistolero aun tiene balas?
+  //el hechicero aun tiene carga?
   if(CargaHechicero==true){
 
     AuxNombreUsuarioVotado="";
@@ -240,35 +252,139 @@ socket.on("RevealHechicero", function(UsuarioVotado){
              //Estructuramos el mensaje
              var texto ="<i>El hechicero ha revelado a <b>"+ObjetivoRol+"</b></i>";
              var msj = {
+              author: "- Servidor -",
+              text: texto
+            }
+            //Enviamos el mensaje por chat
+            messages.push(msj);
+            io.sockets.emit('messages', messages);
+        }
+
+      //actualizamos los tableros
+      io.sockets.emit("ActualizarTablero");
+      //le quitamos la carga
+      CargaHechicero=false;
+ }
+ else
+   //No ha ido bien o de forma esperada.
+   socket.emit("ErrorHechicero");
+
+});
+
+//cura
+socket.on("AguaBendita", function(userId, UsuarioVotado, username){
+  //el cura aun tiene agua?
+  if(AguaBendita==1){
+    //Es lobo?
+    if(ArrayLobos.includes("UsuarioVotado")){
+      //era lobo, lo matamos
+      var muerto=UsuarioVotado
+      var txt="¡Sí era un lobo!";
+    }
+    //no era lobo! Nos morimos
+    else {
+      var muerto=userId;
+      var txt="¡No era un lobo!";
+    }
+    //matamos
+    MatarUsuario(muerto);
+    //Añadimos al muerto
+    ArrayMuertos.push(UsuarioVotado);
+    //Cogemos el nombre del usuario muerto
+    AuxNombreUsuarioVotado="";
+    sacarNombre(muerto);
+    ObjetivoRol=AuxNombreUsuarioVotado;
+     //Dejamos la var en null
+     AuxNombreUsuarioVotado=null;
+     //Si hay algun objetivo
+         if(ObjetivoRol!=null){
+             //Estructuramos el mensaje
+             var texto ="<i>El cura <b>"+username+"</b> ha echado agua bendita a <b>"+ObjetivoRol+" </b>."+txt+"</i>";
+             var msj = {
                author: "- Servidor -",
                text: texto
              }
              //Enviamos el mensaje por chat
              messages.push(msj);
              io.sockets.emit('messages', messages);
-
+             //Reiniciamos la variable de AuxNombreUsuarioVotado
+             AuxNombreUsuarioVotado="";
+             //le quitamos una bala
+             AguaBendita=0;
+             //Mensaje por Servidor
+             console.log("El cura ha gastado su agua bendita");
          }
-
+    //Eso ha revelado al cura
+      revelarRol(userId);
        //actualizamos los tableros
        io.sockets.emit("ActualizarTablero");
-       //le quitamos la carga
-       CargaHechicero=false;
   }
-  else
-    //No ha ido bien o de forma esperada.
-    socket.emit("ErrorHechicero");
-
 });
 
+
+//Psicópata
+/*
+socket.on("AguaBendita", function(userId, UsuarioVotado, username){
+  //el cura aun tiene agua?
+  if(AguaBendita==1){
+    //Es lobo?
+    if(ArrayLobos.includes("UsuarioVotado")){
+      //era lobo, lo matamos
+      var muerto=UsuarioVotado
+      var txt="¡Sí era un lobo!";
+    }
+    //no era lobo! Nos morimos
+    else {
+      var muerto=userId;
+      var txt="¡No era un lobo!";
+    }
+    //matamos
+    MatarUsuario(muerto);
+    //Añadimos al muerto
+    ArrayMuertos.push(UsuarioVotado);
+    //Cogemos el nombre del usuario muerto
+    AuxNombreUsuarioVotado="";
+    sacarNombre(muerto);
+    ObjetivoRol=AuxNombreUsuarioVotado;
+     //Dejamos la var en null
+     AuxNombreUsuarioVotado=null;
+     //Si hay algun objetivo
+         if(ObjetivoRol!=null){
+             //Estructuramos el mensaje
+             var texto ="<i>El cura <b>"+username+"</b> ha echado agua bendita a <b>"+ObjetivoRol+" </b>."+txt+"</i>";
+             var msj = {
+               author: "- Servidor -",
+               text: texto
+             }
+             //Enviamos el mensaje por chat
+             messages.push(msj);
+             io.sockets.emit('messages', messages);
+             //Reiniciamos la variable de AuxNombreUsuarioVotado
+             AuxNombreUsuarioVotado="";
+             //le quitamos una bala
+             AguaBendita=0;
+             //Mensaje por Servidor
+             console.log("El cura ha gastado su agua bendita");
+         }
+    //Eso ha revelado al cura
+      revelarRol(userId);
+       //actualizamos los tableros
+       io.sockets.emit("ActualizarTablero");
+  }
+});
+*/
+
 //========Votaciones=======
+//==VOTO ALDEA==
   socket.on("voto", function(UsuarioVotado, userId, username) {
     var ArrayVotos = [];
     var muerto = false;
-    //Si es hora de votar actua:
-    if(ArrayMuertos.includes(UsuarioVotado) )
+    //El usuario estaba muerto antes?
+    if(ArrayMuertos.includes(UsuarioVotado))
       muerto = true;
 
-    if(EstadoPartida == "Votaciones" && muerto == false){
+      //Si es hora de votar actua:
+      if(EstadoPartida == "Votaciones" && muerto == false){
       console.log("El usuario "+userId+" ha votado a "+UsuarioVotado);
 
       //userId es el que vota, UsuarioVotado al que votamos
@@ -298,40 +414,121 @@ socket.on("RevealHechicero", function(UsuarioVotado){
     }
   });
 
-  //CONTROL DE MUERTOS
-    //Más votado
-    socket.on("MasVotado", function(MasVotado, MasVotos){
-      var UsuarioVotado=" "+MasVotado;
-      //Cambiamos su estado vivo ---> muerto
-      MatarUsuario(MasVotado);
-       //Añadimos al muerto
-       ArrayMuertos.push(MasVotado);
-       //Log en el servidor
-      console.log("Se ha matado al usuario "+UsuarioVotado+" con "+MasVotos+" votos.");
+//==VOTO LOBO==
+  socket.on("votoLobo", function(UsuarioVotado, userId, username) {
+    var ArrayVotosLobo = [];
+    var muerto = false;
+    var comp=false;
+    //El usuario estaba muerto antes?
+    if(ArrayMuertos.includes(UsuarioVotado)){
+        muerto = true;
+    }
+    //Comprobamos que no hayamos votado a un lobo
+    if(ArrayLobos.includes(UsuarioVotado))
+      comp=true;
 
-      //Sacamos el usuario
-      sacarNombre(MasVotado);
-      AuxNombreMasVotado=AuxNombreUsuarioVotado;
-      AuxNombreUsuarioVotado=null;
+      //Si es  de noche actua:
+    if(EstadoPartida == "Noche" && muerto == false && comp!=true){
+      console.log("El lobo "+userId+" ha votado a "+UsuarioVotado+" para que muera esta noche");
 
-      //Si alguien ha sido linchado...
-      if(AuxNombreMasVotado!=null && AuxNombreMasVotado!=CopiaAuxMasVotado){
-        //Mensaje en el chat
-        var msj = {
-          author: "- Servidor -",
-          text: "<h5><b>"+AuxNombreMasVotado +" ha sido linchado hoy.</h5></b>"
-        }
-        //Enviamos el mensaje por chat
-        messages.push(msj);
-        io.sockets.emit('messages', messages);
-        //Reiniciamos la variable de AuxNombreUsuarioVotado
-        AuxNombreUsuarioVotado="";
-        //Guardamos el ultimo linchado
-        CopiaAuxMasVotado=AuxNombreMasVotado;
+      //userId es el que vota, UsuarioVotado al que votamos
+      votosLobo.set(userId, UsuarioVotado);
+
+      for (var [key, value] of votos.entries() ) {
+        ArrayVotosLobo.push(value);
       }
 
-    });
+      //Enviamos el voto a los clientes
+      io.sockets.emit('VotoRecibidoLobo', ArrayVotosLobo);
+      //Cogemos el nombre del usuario votado
+      sacarNombre(UsuarioVotado);
+      if(AuxNombreUsuarioVotado!=null){
+          //Estructuramos el mensaje
+          var texto ="<i>El lobo  <b>"+username+"</b> ha votado a <b>"+AuxNombreUsuarioVotado+" para que muera esta noche </b></i>";
+          var msj = {
+            author: "- Servidor -",
+            text: texto
+          }
+          //Enviamos el mensaje por chat
+          messagesN.push(msj);
+          io.sockets.emit('messagesN', messagesN);
+          //Reiniciamos la variable de AuxNombreUsuarioVotado
+          AuxNombreUsuarioVotado="";
+      }
+    }
+  });
 
+  //CONTROL DE MUERTOS
+  //Más votado
+  socket.on("MasVotado", function(MasVotado, MasVotos){
+    votos.clear();
+    var UsuarioVotado=" "+MasVotado;
+    //Cambiamos su estado vivo ---> muerto
+    MatarUsuario(MasVotado);
+     //Añadimos al muerto
+     ArrayMuertos.push(MasVotado);
+     //Log en el servidor
+    console.log("Se ha matado al usuario "+UsuarioVotado+" con "+MasVotos+" votos.");
+
+    //Sacamos el usuario
+    sacarNombre(MasVotado);
+    AuxNombreMasVotado=AuxNombreUsuarioVotado;
+    AuxNombreUsuarioVotado=null;
+    //Si alguien ha sido linchado...
+    if(AuxNombreMasVotado!=null && AuxNombreMasVotado!=CopiaAuxMasVotado){
+      //Mensaje en el chat
+      var msj = {
+        author: "- Servidor -",
+        text: "<h5><b>"+AuxNombreMasVotado +" ha sido linchado hoy.</h5></b>"
+      }
+      //Enviamos el mensaje por chat
+      messages.push(msj);
+      io.sockets.emit('messages', messages);
+      //Reiniciamos la variable de AuxNombreUsuarioVotado
+      AuxNombreUsuarioVotado="";
+      //Guardamos el ultimo linchado
+      CopiaAuxMasVotado=AuxNombreMasVotado;
+
+      //actualizamos tablero
+      socket.emit("ActualizarTablero");
+    }
+
+  });
+  //Más votado de los lobos
+  socket.on("MasVotadoLobos", function(MasVotadoLobos, MasVotosLobos){
+    votosLobo.clear();
+    var UsuarioVotado=" "+MasVotadoLobos;
+    //Cambiamos su estado vivo ---> muerto
+    MatarUsuario(MasVotadoLobos);
+     //Añadimos al muerto
+     ArrayMuertos.push(MasVotadoLobos);
+     //Log en el servidor
+    console.log("Los lobos han matado al "+UsuarioVotado+" con "+MasVotosLobos+" votos.");
+
+    //Sacamos el usuario
+    sacarNombre(MasVotadoLobos);
+    AuxNombreMasVotado=AuxNombreUsuarioVotado;
+    AuxNombreUsuarioVotado=null;
+    //Si alguien ha sido linchado...
+    if(AuxNombreMasVotado!=null && AuxNombreMasVotado!=CopiaAuxMasVotado){
+      //Mensaje en el chat
+      var msj = {
+        author: "- Servidor -",
+        text: "<h5>Los lobos han matado a <b>"+AuxNombreMasVotado +"con "+MasVotosLobos+" votos.</h5></b>"
+      }
+      //Enviamos el mensaje por chat
+      messages.push(msj);
+      io.sockets.emit('messages', messages);
+      //Reiniciamos la variable de AuxNombreUsuarioVotado
+      AuxNombreUsuarioVotado="";
+      //Guardamos el ultimo linchado
+      CopiaAuxMasVotado=AuxNombreMasVotado;
+    }
+
+    //actualizamos tablero
+    socket.emit("ActualizarTablero");
+
+  });
 
 //fin sockets
 });
@@ -425,7 +622,7 @@ if(EstadoPartida=="Asignando"){
     contador(tiempo_espera, "Dia");
   }
   if (EstadoPartida=="Votaciones") {
-    console.log("Es momento de votar a los lobos/ Psicopata");
+    console.log("Es momento de votar a los lobos/ Psicópata");
     console.log("Volverá la noche");
     tiempo_espera=10;
 
@@ -436,7 +633,7 @@ if(EstadoPartida=="Asignando"){
     ArrayVotos=[];
     console.log("Votos reiniciados");
     console.log("Es de día.");
-    console.log("Un par de aldeanos han muerto por el  Psicopata y por los lobos");
+    console.log("Un par de aldeanos han muerto por el  Psicópata y por los lobos");
     console.log("Es momento de discutir");
     tiempo_espera=10;
 
@@ -491,13 +688,13 @@ function asignar_roles(){
       -lobos 2
       -1 vidente
       -Pistolero
-      - Psicopata
+      - Psicópata
       -Cura
       -Doctor
       -1 aldeano
     */
   if(NumUsuarios==8) {
-    Roles = ["Lobo", "Lobo", "Vidente", "Pistolero", "Psicopata", "Cura", "Doctor", "Aldeano"];
+    Roles = ["Lobo", "Lobo", "Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Aldeano"];
     shuffle_rols(Roles);
 }
   /*
@@ -505,12 +702,12 @@ function asignar_roles(){
     -lobos 3
     -1 vidente
     -Pistolero
-    - Psicopata
+    - Psicópata
     -Cura
     -Doctor
     -1 aldeano*/
   else if (NumUsuarios==9) {
-    Roles = ["Lobo", "Lobo","Lobo", "Vidente", "Pistolero", "Psicopata", "Cura", "Doctor", "Aldeano"];
+    Roles = ["Lobo", "Lobo","Lobo", "Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Aldeano"];
     shuffle_rols(Roles);
 
   }
@@ -519,13 +716,13 @@ function asignar_roles(){
       -lobos 3
       -2 videntes
       -Pistolero
-      - Psicopata
+      - Psicópata
       -Cura
       -Bufon
       -Doctor
       */
   else if (NumUsuarios==10) {
-    Roles = ["Lobo", "Lobo", "Lobo", "Vidente", "Vidente", "Pistolero", "Psicopata", "Cura", "Doctor", "Bufon"];
+    Roles = ["Lobo", "Lobo", "Lobo", "Vidente", "Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufon"];
     shuffle_rols(Roles);
 
   }
@@ -535,14 +732,14 @@ function asignar_roles(){
       -lobos 3
       -2 videntes
       -Pistolero
-      - Psicopata
+      - Psicópata
       -Cura
       -Bufon
       -Doctor
       -Guardaespaldas
       */
   else if (NumUsuarios==11) {
-    Roles = ["Lobo", "Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicopata", "Cura", "Doctor", "Bufon", "Guardaespaldas"];
+    Roles = ["Lobo", "Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufon", "Guardaespaldas"];
     shuffle_rols(Roles);
 
   }
@@ -551,13 +748,13 @@ function asignar_roles(){
       -lobos 4
       -2 videntes
       -Pistolero
-      - Psicopata
+      - Psicópata
       -Cura
       -Bufon
       -Doctor
       -Guardaespaldas*/
   else if(NumUsuarios==12){
-    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicopata", "Cura", "Doctor", "Bufon", "Guardaespaldas"];
+    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufon", "Guardaespaldas"];
     shuffle_rols(Roles);
 
   }
@@ -566,7 +763,7 @@ function asignar_roles(){
   -lobos 4
   -2 videntes
   -Pistolero
-  - Psicopata
+  - Psicópata
   -Cura
   -bufon
   - Doctor
@@ -574,7 +771,7 @@ function asignar_roles(){
   -Guardaespaldas
   */
   else if (NumUsuarios==13) {
-    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicopata", "Cura", "Doctor", "Bufon", "Guardaespaldas", "Hechicero"];
+    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufon", "Guardaespaldas", "Hechicero"];
     shuffle_rols(Roles);
 
   }
@@ -583,17 +780,17 @@ function asignar_roles(){
         El resto son aldeanos
   */
   else if (NumUsuarios==14) {
-    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicopata", "Cura", "Doctor", "Bufon", "Guardaespaldas", "Hechicero", "Aldeano"];
+    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufon", "Guardaespaldas", "Hechicero", "Aldeano"];
     shuffle_rols(Roles);
 
   }
   else if (NumUsuarios==15) {
-    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicopata", "Cura", "Doctor", "Bufon", "Guardaespaldas", "Hechicero", "Aldeano", "Aldeano"];
+    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufon", "Guardaespaldas", "Hechicero", "Aldeano", "Aldeano"];
     shuffle_rols(Roles);
 
   }
   else if (NumUsuarios==16) {
-    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicopata", "Cura", "Doctor", "Bufon", "Guardaespaldas", "Aldeano", "Hechicero", "Aldeano","Aldeano"];
+    Roles = ["Lobo", "Lobo","Lobo", "Lobo", "Vidente","Vidente", "Pistolero", "Psicópata", "Cura", "Doctor", "Bufon", "Guardaespaldas", "Aldeano", "Hechicero", "Aldeano","Aldeano"];
     shuffle_rols(Roles);
 
   }

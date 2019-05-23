@@ -7,11 +7,15 @@
   var UsuarioVotado = "";
   let MasVotos=0;
   let MasVotado=null;
+  let MasVotosLobos=0;
+  let MasVotadoLobos=null;
   var avisoMuerte=false;
   var Muerte = false;
   var accion = false;
   var accionVidente = false;
   var rolvisto="";
+  var ArrayLobosCliente = [];
+  var asesinado;
 
       console.log("===DATOS===");
       const userId= $('#userid').text();
@@ -52,10 +56,13 @@
 //==============CODIGO DE PARTIDA================
   socket.on("estado", function(EstadoPartida, tiempo){
     estado = EstadoPartida;
+    //Commprobamos si estamos muertos
+    comprobarMuerte();
     $('#ContadorVotos').hide();
     var Info = document.getElementById('InfoPartida');
     //actualizamos tablero por si hay cambios
     tablero();
+
     //Comprobamos los roles en todos los casos menos en empezar, que es cuando se asignan
     if(EstadoPartida!="Empezada")
       coger_rol();
@@ -78,23 +85,28 @@
 
     }
       if(EstadoPartida=="Noche"){
-
+        //Enviamos al servidor el usuario que ha sido mas votado
         socket.emit("MasVotado", MasVotado, MasVotos);
-        accionVidente=true;
-        console.log("Es de noche.");
-        console.log("Los lobos votan a un aldeano para morir");
-
-        //Comprobamos si somos nosotros quienes hemos muerto y si no hemos
-        //avisado antes
+        //Comprobamos si somos nosotros quienes hemos muerto y si no hemos avisado antes
         if(MasVotado==userId && avisoMuerte == false){
           Muerte = true;
           avisoMuerte=true;
           avisoDeMuerte();
         }
+        //activamos la habilidad de la vidente
+        accionVidente=true;
+        //Enviamos nuestra id si somos lobos
+        if(rol=="Lobo")
+         socket.emit("EnviarLobo", userId);
+        //logs
+        console.log("Es de noche.");
+        console.log("Los lobos votan a un aldeano para morir");
 
+        //Cambiamos la apariencia de la aldea a noche
         $("body").attr('class', 'noche');
         Info.innerHTML = ("Es de noche. Los lobos votan a un aldeano para morir.  <div id='segundos'><br>Tiempo: 0 segundos</div>");
 
+        //Cambiamos el chat al de los lobos (si lo somos)
         console.log(rol);
         if (rol=="Lobo"){
         $( "#chat_dia" ).hide();
@@ -103,16 +115,24 @@
 
       }
       if (EstadoPartida=="Votaciones") {
-        console.log("Es momento de votar a los lobos/ Psicopata");
+        console.log("Es momento de votar a los lobos/ Psicópata");
         console.log("Volverá la noche");
-        Info.innerHTML = ("Es momento de votar a los lobos/ Psicopata. Volverá la noche pronto.  <div id='segundos'><br>Tiempo: 0 segundos</div>") ;
+        Info.innerHTML = ("Es momento de votar a los lobos/ Psicópata. Volverá la noche pronto.  <div id='segundos'><br>Tiempo: 0 segundos</div>") ;
         //==votaciones==
         $('#ContadorVotos').show();
 
       }
      if (EstadoPartida=="Dia") {
+       //Enviamos al servidor el usuario que ha sido matado por los lobos
+       socket.emit("MasVotadoLobos", MasVotadoLobos, MasVotosLobos);
+       //Comprobamos si somos nosotros quienes hemos muerto y si no hemos avisado antes
+       if(MasVotadoLobos==userId || asesinado==userId && avisoMuerte == false){
+         Muerte = true;
+         avisoMuerte=true;
+         avisoDeMuerte();
+       }
         console.log("Es de día.");
-        console.log("Un par de aldeanos han muerto por el  Psicopata y por los lobos");
+        console.log("Un par de aldeanos han muerto por el  Psicópata y por los lobos");
         console.log("Es momento de discutir");
         $("body").attr('class', 'dia');
         Info.innerHTML = ("Es de día. Es momento de discutir quién es malo.  <div id='segundos'><br>Tiempo: 0 segundos</div>" ) ;
@@ -143,6 +163,7 @@
     console.log(segundos);
     TiempoPartida.innerHTML = " <br>Tiempo:</b><i> "+segundos+" segundos</i>";
   });
+
 
   //El servidor ha recibido un voto
   socket.on('VotoRecibido', function(ArrayVotos){
@@ -193,12 +214,14 @@ function votar(e){
           accion_rol();
         else if((rol=="Pistolero" || rol=="Cura" || rol =="Hechicero" )&& estado!="Noche" && accion==true)
           accion_rol();
-          
-        
+        else if(rol=="Psicópata" && estado=="Noche")
+          accion_rol();
       }
     }
     //Esta muerto?
     if(Muerte==false){
+      //VOTACIONES DE ALDEA
+
       //Nos estamos votando a nosotros mismos?
       if(estado=="Votaciones"){
       //Se puede votar?
@@ -212,13 +235,34 @@ function votar(e){
             text: 'No puedes votarte a ti mismo'
         })
       }
+
+      //VOTACIONES DE LOBO
+
       if(estado=="Noche" && rol=="Lobo"){
         //Nos votamos a nosotros mismos?
           if(UsuarioVotado != userId){
             //Enviamos el voto al servidor
               socket.emit("votoLobo", UsuarioVotado, userId, username);
-          }
-            else //Alertas de error vvv
+            }
+            //Alertas de error vvv
+            else
+              Swal.fire({
+                type: 'error',
+                title: 'Oops...',
+                text: 'No puedes votarte a ti mismo'
+            })
+      }
+
+      //VOTACIONES DE Psicópata
+
+      if(estado=="Noche" && rol=="Psicópata"){
+        //Nos votamos a nosotros mismos?
+          if(UsuarioVotado != userId){
+            //Enviamos el voto al servidor
+              socket.emit("votoPsicopata", UsuarioVotado, userId, username);
+            }
+            //Alertas de error vvv
+            else
               Swal.fire({
                 type: 'error',
                 title: 'Oops...',
@@ -341,6 +385,11 @@ function comprobarMuerte(){
     }
   });
   sleep(900);
+  if(MasVotado==userId && avisoMuerte == false){
+    Muerte = true;
+    avisoMuerte=true;
+    avisoDeMuerte();
+  }
 }
 
 function sleep(ms) {
@@ -463,8 +512,8 @@ function tablero(){
 function cargar_accion(){
   if (rol=="Cura")
   var accion = '<img src="/img/cura.png" alt="Cura">'
-  if (rol=="Psicopata")
-  var accion = '<img src="/img/psicopata.png" alt="Psicopata"  >'
+  if (rol=="Psicópata")
+  var accion = '<img src="/img/Psicópata.png" alt="Psicópata"  >'
   if (rol=="Pistolero")
   var accion = '<img src="/img/pistolero.png" alt="Pistolero"  >'
   if (rol=="Vidente")
@@ -506,8 +555,39 @@ function accion_rol () {
     accion=false;
     socket.emit("RevealHechicero", UsuarioVotado);
   }
+  if(rol=="Cura"){
+    accion=false;
+    socket.emit("AguaBendita", userId, UsuarioVotado, username);
+  }
+  if(rol=="Psicópata"){
+    accion = false;
+    socket.emit("Cuchillada", UsuarioVotado);
+  }
 
 }
+
+//Lobos
+socket.on("VotoRecibidoLobo", function(ArrayVotosLobo){
+  if(rol=="Lobo"){
+    let result=contarFreq(ArrayVotosLobo);
+    //Ponemos los contadores a 0
+    $('span').text("0");
+
+    for (var i = 0; i < result.length; i++) {
+        var UsuarioVotado= result[0][i];
+        console.log("EL ID" + result[0][i]);
+        console.log("NUMERO DE VOTOS" + result[1][i]);
+        var NumVotosLobos = result[1][i];
+        var selecSpan = eliminarEspacios(UsuarioVotado);
+        $('#'+selecSpan).text(NumVotosLobos);
+        if(NumVotosLobos>MasVotosLobos){
+          MasVotosLobos= NumVotosLobos;
+          MasVotadoLobos = UsuarioVotado;
+        }
+      }
+
+    }
+  });
 
 /*ACCIONES Y UTILIDADES DE ROL */
 
@@ -552,7 +632,7 @@ function avisoRol(){
   if (rolvisto=="Lobo") {
     equipo="Pertenece al equipo de los lobos. ¡Matarlo!";
   }
-  else if (rolvisto=="Psicopata") {
+  else if (rolvisto=="Psicópata") {
     equipo="Pertenece al equipo de los malos. ¡Matarlo!";
   }
   else if (rolvisto=="Bufon") {
@@ -566,4 +646,12 @@ function avisoRol(){
       '<i class="fa fa-thumbs-up"></i> Ok!'
   });
 
+}
+
+function votoMuerto(){
+  Swal.fire({
+    type: 'error',
+    title: 'Oops...',
+    text: 'No puedes votar un muerto'
+  })
 }
