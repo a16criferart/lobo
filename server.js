@@ -150,11 +150,13 @@ var votosLobo = new Map();
 var ArrayVotos = [];
 var ArrayVotosLobo = [];
 var ArrayMuertos= [];
-//var AuxNombreUsuarioVotado;
 var AuxNombreMasVotado;
 var CopiaAuxMasVotado;
 var CopiaAuxMasVotadoLobos;
+//partida
+var partidaAcabada = false;
 //roles
+var ArrayAldea = [];
 var ArrayLobos = [];
 var ObjetivoRol=null;
 var NombreUsuarioRol=null;
@@ -166,9 +168,11 @@ var IdBufon=null;
 var ProtegidoDoctor=null;
 var ProtegidoGuarda=null;
 var Guardaespaldas=null;
+var IdAsesino=null;
 //===SOCKET===
 io.on('connection', function(socket) {
   socket.emit('hola', EstadoPartida);
+  io.sockets.emit("ActualizarTablero");
 
   //chat dia
   socket.emit('messages', messages);
@@ -198,13 +202,17 @@ socket.on("EnviarLobo", function(userId){
 });
 
 //Bufon
-
 //Bufón recibido en el cliente, avisa al servidor
 socket.on("EnviarBufon", function(userId){
   //Aguardamos el Bufón
   IdBufon=userId;
   //Lo enviamos a los clientes
   io.sockets.emit("DevolverBufon", IdBufon)
+});
+//ALDEA
+socket.on("EnviarAldea", function(aldeano){
+  if(!ArrayAldea.includes(aldeano))
+    ArrayAldea.push(aldeano);
 });
 
 //pistolero
@@ -306,7 +314,7 @@ socket.on("AguaBendita", function(userId, UsuarioVotado, username){
     //matamos
     MatarUsuario(muerto);
     //Añadimos al muerto
-    ArrayMuertos.push(UsuarioVotado);
+    ArrayMuertos.push(muerto);
     //cogemos el nombre
     ObjetivoRol= sacarNombre(muerto);
      //Si hay algun objetivo
@@ -339,7 +347,9 @@ socket.on("AguaBendita", function(userId, UsuarioVotado, username){
 
 
 //Psicópata
-socket.on("Cuchillada", function(UsuarioVotado){
+socket.on("Cuchillada", function(UsuarioVotado, userId){
+  IdAsesino=userId;
+
   if(cuchillada==true){
       //matamos
       MatarUsuario(UsuarioVotado);
@@ -482,13 +492,26 @@ socket.on("ProteccionGuarda", function(UsuarioVotado, userId){
   //CONTROL DE MUERTOS
   //Más votado
   socket.on("MasVotado", function(MasVotado, MasVotos){
-    var UsuarioVotado=" "+MasVotado;
-    //Cambiamos su estado vivo ---> muerto
-    MatarUsuario(MasVotado);
+    if(IdBufon==MasVotado){
+      EstadoPartida="Finalizada";
+      partidaAcabada=true;
+      var msj = {
+        author: "- Servidor -",
+        text: "<h2><b>La aldea ha votado al bufón ¡Él gana!</h2></b>"
+      }
+      //Enviamos el mensaje por chat
+      messages.push(msj);
+      io.sockets.emit('messages', messages);
+
+      manejar_estado();
+    }
+    else{
+     //Cambiamos su estado vivo ---> muerto
+     MatarUsuario(MasVotado);
      //Añadimos al muerto
      ArrayMuertos.push(MasVotado);
      //Log en el servidor
-    console.log("Se ha matado al usuario "+UsuarioVotado+" con "+MasVotos+" votos.");
+    console.log("Se ha matado al usuario "+MasVotado+" con "+MasVotos+" votos.");
 
     //Sacamos el usuario
     nombre= sacarNombre(MasVotado);
@@ -506,17 +529,16 @@ socket.on("ProteccionGuarda", function(UsuarioVotado, userId){
         text: "<h5><b>Se ha linchado hoy.</h5></b>"
       }
     }
+      //Guardamos el ultimo linchado
+      CopiaAuxMasVotado=nombre;
+      //actualizamos tablero
+      socket.emit("ActualizarTablero");
       //Enviamos el mensaje por chat
       messages.push(msj);
       io.sockets.emit('messages', messages);
-      //Guardamos el ultimo linchado
-      CopiaAuxMasVotado=nombre;
 
-      //actualizamos tablero
-      socket.emit("ActualizarTablero");
-
-        votos.clear();
-
+    }
+    votos.clear();
   });
   //Más votado de los lobos
   socket.on("MasVotadoLobos", function(MasVotadoLobos, MasVotosLobos){
@@ -582,6 +604,150 @@ socket.on("ProteccionGuarda", function(UsuarioVotado, userId){
 socket.on("FinalizarPartida", function(){
   EstadoPartida="Finalizada"
 });
+
+
+//===ESTADOS DE GANADO====
+
+//Si hay menos aldea que Lobos
+socket.on("ComprobarLobosAldeanos", function(){
+  console.log("Comprobando que hay más aldea que lobos");
+  var contLobos=ArrayLobos.length;
+  var contAldea=ArrayAldea.length;
+
+  for (var i = 0; i < ArrayMuertos.length; i++) {
+    if(ArrayAldea.includes(ArrayMuertos[i]) )
+      contAldea--;
+    else if(ArrayLobos.includes(ArrayMuertos[i]) )
+      contLobos--;
+  }
+  //Más aldea que lobos?
+  if(contAldea>contLobos){
+    var valor="False";
+  }
+  //más lobos que aldea
+  else
+    var valor="True";
+
+  socket.emit("Check", valor);
+
+});
+
+//Si hay 1 y 1 de lobo y aldea
+
+  socket.on("ComprobarLoboAldeano", function(){
+    console.log("Comprobando que no sea 1 y 1 lobo aldea");
+  var contLobos=ArrayLobos.length;
+  var contAldea=ArrayAldea.length;
+
+  for (var i = 0; i < ArrayMuertos.length; i++) {
+    if(ArrayAldea.includes(ArrayMuertos[i]) )
+      contAldea--;
+    else if(ArrayLobos.includes(ArrayMuertos[i]) )
+      contLobos--;
+  }
+  //Están 1 y 1?
+  if(contAldea==contLobos && contAldea==1){
+    var valor="true";
+  }
+  //No es el caso
+  else
+    var valor="True";
+
+  socket.emit("Check", valor);
+
+});
+
+//Si hay 1 lobo y 1 asesino
+
+  socket.on("ComprobarLoboAsesino", function(){
+  console.log("Comprobando que no sea 1 lobo y 1 asesino");
+  var contLobos=ArrayLobos.length;
+  var contAldea=ArrayAldea.length;
+  var AsesinoVivo=true;
+
+  for (var i = 0; i < ArrayMuertos.length; i++) {
+    if(ArrayAldea.includes(ArrayMuertos[i]) )
+      contAldea--;
+    else if(ArrayLobos.includes(ArrayMuertos[i]) )
+      contLobos--;
+  }
+
+  if(ArrayMuertos.includes(IdAsesino))
+    AsesinoVivo=false;
+
+  //Están 1 a 1 el lobo y el asesino?
+    if(contAldea==0 && contLobos==1 && AsesinoVivo==true){
+    var valor="True";
+  }
+  //No es el caso
+  else
+    var valor="False";
+
+  socket.emit("Check", valor);
+
+});
+
+
+//Si hay 1 aldeano y 1 asesino
+
+  socket.on("ComprobarAsesinoAldeano", function(){
+    console.log("Comprobando que no sea 1 aldeano y 1 asesino");
+  var contLobos=ArrayLobos.length;
+  var contAldea=ArrayAldea.length;
+  var AsesinoVivo=true;
+
+  for (var i = 0; i < ArrayMuertos.length; i++) {
+    if(ArrayAldea.includes(ArrayMuertos[i]) )
+      contAldea--;
+    else if(ArrayLobos.includes(ArrayMuertos[i]) )
+      contLobos--;
+  }
+
+  if(ArrayMuertos.includes(IdAsesino))
+    AsesinoVivo=false;
+
+  //Están 1 aldeano y 1 asesino?
+    if(contAldea==1 && contLobos==0 && AsesinoVivo==true){
+    var valor="True";
+  }
+  //No es el caso
+  else
+    var valor="False";
+
+  socket.emit("Check", valor);
+
+});
+
+//Si hay solamente 1 asesino
+
+  socket.on("ComprobarAsesinoAldeano", function(){
+  console.log("Comprobando que no sea solo 1 asesino");
+  var contLobos=ArrayLobos.length;
+  var contAldea=ArrayAldea.length;
+  var AsesinoVivo=true;
+
+  for (var i = 0; i < ArrayMuertos.length; i++) {
+    if(ArrayAldea.includes(ArrayMuertos[i]) )
+      contAldea--;
+    else if(ArrayLobos.includes(ArrayMuertos[i]) )
+      contLobos--;
+  }
+
+  if(ArrayMuertos.includes(IdAsesino))
+    AsesinoVivo=false;
+
+  //Están 1 aldeano y 1 asesino?
+    if(contAldea==0 && contLobos==0 && AsesinoVivo==true){
+    var valor="True";
+  }
+  //No es el caso
+  else
+    var valor="False";
+
+  socket.emit("Check", valor);
+
+});
+
 //fin sockets
 });
 
@@ -644,6 +810,69 @@ function sacarNombre(id){
 }
 
 function manejar_estado(){
+  if(partidaAcabada==false && EstadoPartida!="Finalizada"){
+    var tiempo_espera="";
+
+    if(EstadoPartida=="Pendiente"){
+    //empieza la partida tras una espera de unos segundos
+    //Si hay 8 jugadores esperaremos 60s
+    tiempo_espera = 10000;
+    //si hay menos de 10 y mas de 8, 30s
+    if(NumUsuarios>8 && NumUsuarios<10)
+      tiempo_espera = 10000;
+    //si hay más de 10, 10s
+    else if (NumUsuarios>10)
+      tiempo_espera = 10000;
+
+    console.log("Hay suficientes jugadores para empezar, vamos a cambiar el estado de la partida dentro de "+tiempo_espera/1000+" segundos. Esperamos posibles nuevos jugadores.");
+    setTimeout(cambiar_estado,tiempo_espera,"Empezada");
+  }
+  if(EstadoPartida=="Empezada"){
+    //asignar roles
+    asignar_roles();
+    //contador para empezar la partida. Le pasamos el siguiente estado
+    console.log("Cuenta atrás para empezar la partida: ");
+    tiempo_espera=8;
+    contador(tiempo_espera, "Asignando");
+  }
+
+  if(EstadoPartida=="Asignando"){
+    tiempo_espera=3;
+    contador(tiempo_espera, "Noche");
+  }
+
+  if(EstadoPartida=="Noche"){
+      //Reiniciamos la cuchillada para el psicópata
+      cuchillada=true;
+
+      console.log("Es de noche.");
+      console.log("Los lobos votan a un aldeano para morir");
+      tiempo_espera=10;
+
+      contador(tiempo_espera, "Dia");
+    }
+
+  if (EstadoPartida=="Votaciones") {
+      console.log("Es momento de votar a los lobos/ Psicópata");
+      console.log("Volverá la noche");
+      tiempo_espera=10;
+
+      contador(tiempo_espera, "Noche");
+    }
+
+   if (EstadoPartida=="Dia") {
+     //Un nuevo día, reiniciamos el array de votos
+      ArrayVotos=[];
+      console.log("Votos reiniciados");
+      console.log("Es de día.");
+      console.log("Un par de aldeanos han muerto por el  Psicópata y por los lobos");
+      console.log("Es momento de discutir");
+      tiempo_espera=10;
+
+      contador(tiempo_espera, "Votaciones");
+    }
+  }
+
   if(EstadoPartida=="Finalizada"){
     console.log("La partida ha acabado<<<<<<<<<<");
     //Borramos los usuarios en esta sala
@@ -652,64 +881,8 @@ function manejar_estado(){
     var partida = db.collection('partida').doc(IDPartida);
     // Set the 'capital' field of the city
     var updateSingle = partida.update({estado: "Pendiente"});
-    return;
   }
-  var tiempo_espera="";
 
-  if(EstadoPartida=="Pendiente"){
-  //empieza la partida tras una espera de unos segundos
-  //Si hay 8 jugadores esperaremos 60s
-  tiempo_espera = 10000;
-  //si hay menos de 10 y mas de 8, 30s
-  if(NumUsuarios>8 && NumUsuarios<10)
-    tiempo_espera = 10000;
-  //si hay más de 10, 10s
-  else if (NumUsuarios>10)
-    tiempo_espera = 10000;
-
-  console.log("Hay suficientes jugadores para empezar, vamos a cambiar el estado de la partida dentro de "+tiempo_espera/1000+" segundos. Esperamos posibles nuevos jugadores.");
-  setTimeout(cambiar_estado,tiempo_espera,"Empezada");
-}
-if(EstadoPartida=="Empezada"){
-  //asignar roles
-  asignar_roles();
-  //contador para empezar la partida. Le pasamos el siguiente estado
-  console.log("Cuenta atrás para empezar la partida: ");
-  tiempo_espera=8;
-  contador(tiempo_espera, "Asignando");
-}
-if(EstadoPartida=="Asignando"){
-  tiempo_espera=3;
-  contador(tiempo_espera, "Noche");
-}
-  if(EstadoPartida=="Noche"){
-    //Reiniciamos la cuchillada para el psicópata
-    cuchillada=true;
-
-    console.log("Es de noche.");
-    console.log("Los lobos votan a un aldeano para morir");
-    tiempo_espera=10;
-
-    contador(tiempo_espera, "Dia");
-  }
-  if (EstadoPartida=="Votaciones") {
-    console.log("Es momento de votar a los lobos/ Psicópata");
-    console.log("Volverá la noche");
-    tiempo_espera=10;
-
-    contador(tiempo_espera, "Noche");
-  }
- if (EstadoPartida=="Dia") {
-   //Un nuevo día, reiniciamos el array de votos
-    ArrayVotos=[];
-    console.log("Votos reiniciados");
-    console.log("Es de día.");
-    console.log("Un par de aldeanos han muerto por el  Psicópata y por los lobos");
-    console.log("Es momento de discutir");
-    tiempo_espera=10;
-
-    contador(tiempo_espera, "Votaciones");
-  }
   //Hemos acabado, enviamos el estado de la PARTIDA
   io.sockets.emit("estado", EstadoPartida, tiempo_espera);
 }
@@ -733,21 +906,26 @@ function cambiar_estado(estado){
 }
 
 function contador(tiempo, SiguienteEstado) {
+    if(partidaAcabada==false || EstadoPartida=="Finalizada"){
+      var counter = tiempo;
+        var interval = setInterval(function() {
+        counter--;
+        console.log(counter)
+        io.sockets.emit("tiempo", counter);
+        if (counter == 0) {
+            // Display message
+            console.log("Contador terminado");
+            clearInterval(interval);
+            //cambiar_estado(SiguienteEstado);
+            EstadoPartida=SiguienteEstado;
+            manejar_estado();
+        }
+    }, 1000);
+  }else{
+    EstadoPartida="Finalizada";
+    console.log("La partida ha acabado.");
+  }
 
-    var counter = tiempo;
-      var interval = setInterval(function() {
-      counter--;
-      console.log(counter)
-      io.sockets.emit("tiempo", counter);
-      if (counter == 0) {
-          // Display message
-          console.log("Contador terminado");
-          clearInterval(interval);
-          //cambiar_estado(SiguienteEstado);
-          EstadoPartida=SiguienteEstado;
-          manejar_estado();
-      }
-  }, 1000);
 }
 
 //====ROLES====

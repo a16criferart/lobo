@@ -20,6 +20,8 @@
   var ArrayLobosCliente = [];
   var asesinado;
   var IdBufon=null;
+  var Ganador=false;
+  var EquipoGanador=null;
 
       console.log("===DATOS===");
       const userId= $('#userid').text();
@@ -59,6 +61,22 @@
 
 //==============CODIGO DE PARTIDA================
   socket.on("estado", function(EstadoPartida, tiempo){
+    //ENVIAMOS ROLES A CADA CAMBIO POR SEGURIDAD
+    //Enviamos nuestra id si somos lobos
+    if(rol=="Lobo")
+     socket.emit("EnviarLobo", userId);
+     //Enviamos nuestra id si somos el bufon
+     if(rol=="Bufón"){
+       socket.emit("EnviarBufon", userId);
+     }
+     //Si somos aldea
+     if(rol!="Psicópata" && rol!="Lobo" && rol!="Bufón"){
+       socket.emit("EnviarAldea", userId);
+     }
+
+     //Comprobamos que la partida no esté ganada
+     compPartidaGanada();
+
     //La partida ha acabado?
     if(partidaAcabada==true)
       socket.emit("FinalizarPartida");
@@ -80,13 +98,6 @@
 
 
     if(EstadoPartida=="Empezada"){
-      //Enviamos nuestra id si somos lobos
-      if(rol=="Lobo")
-       socket.emit("EnviarLobo", userId);
-       //Enviamos nuestra id si somos el bufon
-       if(rol=="Bufón"){
-         socket.emit("EnviarBufon", userId);
-       }
       //contador para empezar la partida. Le pasamos el siguiente estado
       console.log("Cuenta atrás para empezar la partida. aprox:"+tiempo+" segundos");
       Info.innerHTML = "Cuenta atrás para empezar asignar los roles y comenzar. <div id='segundos'><br>Tiempo: 0 segundos</div>";
@@ -100,34 +111,49 @@
 
     }
       if(EstadoPartida=="Noche"){
+        //si se ha votado durante el día
         if(VotacionesHechas==true){
-          if(MasVotado==IdBufon){
-            //Se ha acabado la partida porque ha ganado el bufón
-            alertBufon();
-            partidaAcabada=true;
-            if(IdBufon==userId){
-              avisoMuerte=true;
-              setTimeout(alertHasGanado, 3000);
-            }
-            else{
-              setTimeout(alertHasPerdido, 3000);
-              }
-              socket.emit("FinalizarPartida");
-              EstadoPartida="Finalizada";
-              estado="Finalizada";
-          }
-
           //Enviamos al servidor el usuario que ha sido mas votado
           socket.emit("MasVotado", MasVotado, MasVotos);
+          //reiniciamos la var
           VotacionesHechas=false;
+          //Si el más votado es el bufón
+          if(MasVotado==IdBufon && IdBufon!=null){
+            //Se ha acabado la partida porque ha ganado el bufón
+            console.log("1");
+            alertBufon();
+            //no damos más avisos de muerte
+            avisoMuerte=true;
+            partidaAcabada=true;
+            EquipoGanador="Bufón";
+            EstadoPartida="Finalizada";
+            estado="Finalizada";
+
+            //Damos tiempo
+
+            //Somos nosotros?
+            if(rol == "Bufón"){
+              console.log("3");
+              Muerto=false;
+              setTimeout(alertHasGanado, 3000);
+              //alertHasGanado();
+            }
+            else{
+              console.log("3b");
+              setTimeout(alertHasPerdido, 3000);
+              //alertHasPerdido();
+            }
+          }
+          else{
+            //Comprobamos si somos nosotros quienes hemos muerto y si no hemos avisado antes
+            if(MasVotado==userId && avisoMuerte == false &&  partidaAcabada==false && rol!="Bufón"){
+              Muerte = true;
+              avisoMuerte=true;
+              avisoDeMuerte();
+            }
+          }
         }
 
-        //Comprobamos si somos nosotros quienes hemos muerto y si no hemos avisado antes
-        if(MasVotado==userId && avisoMuerte == false){
-          Muerte = true; 
-          avisoMuerte=true;
-          avisoDeMuerte();
-        }
         //activamos la habilidad de la vidente
         accionVidente=true;
         //logs
@@ -177,7 +203,11 @@
         }
       }
       if(EstadoPartida=="Finalizada"){
-        setTimeout(  location.href ="/perfil", 4000 );
+        AlertaGanador();
+
+        sleep(5000);
+
+        setTimeout("location.href ='/perfil';",5000);
       }
 
   });
@@ -219,6 +249,74 @@
     }
   });
 //======FUNCIONES!!======
+
+function compPartidaGanada(){
+  var check="False";
+
+  //Si hay menos aldea que Lobos
+  socket.emit("ComprobarLobosAldeanos");
+  socket.on("Check", function(valor){
+    check=valor;
+  });
+
+  if(check=="True")
+    EquipoGanador="Lobos";
+
+  //Si hay 1 lobo 1 aldea gana lobos
+  if(check=="False"){
+    socket.emit("ComprobarLoboAldeano")
+    socket.on("Check", function(valor){
+      check=valor;
+    });
+
+    if(check=="True")
+      EquipoGanador="Lobos";
+
+  }
+
+
+  //si hay 1 lobo 1 asesino gana asesino
+  if(check=="False"){
+    socket.emit("ComprobarLoboAsesino")
+    socket.on("Check", function(valor){
+      check=valor;
+    });
+    if(check=="True")
+      EquipoGanador="Asesino";
+  }
+
+  //si hay 1 asesino 1 aldea gana asesino
+  if(check=="False"){
+    socket.emit("ComprobarAsesinoAldeano")
+    socket.on("Check", function(valor){
+      check=valor;
+    });
+    if(check=="True")
+      EquipoGanador="Asesino";
+  }
+
+
+  //Si el asesino esta solo gana asesino
+  if(check=="False"){
+    socket.emit("ComprobarAsesino")
+    socket.on("Check", function(valor){
+      check=valor;
+    });
+    if(check=="True")
+      EquipoGanador="Asesino";
+  }
+
+
+  if(check=="True")
+    return true;
+
+  else if(check ==  "False"){
+    return false;
+  }
+
+}
+
+
 
 function contarFreq(arr) {
     var a = [], b = [], prev;
@@ -341,6 +439,7 @@ function comprobar_usuario(id_usuario, username, IDPartida){
              else{
                console.log("El usuario no existia en la partida");
                añadir_jugador(id_usuario,username,IDPartida )
+               tablero();
              }
          })
   }
@@ -422,10 +521,15 @@ function comprobarMuerte(){
     }
   });
   sleep(900);
-  if(MasVotado==userId && avisoMuerte == false){
-    Muerte = true;
-    avisoMuerte=true;
-    avisoDeMuerte();
+  if(MasVotado==userId && avisoMuerte == false ){
+    if(rol == "Bufón"){
+      alertHasGanado();
+    }
+    else{
+      Muerte = true;
+      avisoMuerte=true;
+      avisoDeMuerte();
+    }
   }
 }
 
@@ -434,10 +538,18 @@ function sleep(ms) {
 }
 //=================TABLERO==================
 function tablero(){
+ //Comprobamos que la partida no esté ganada
+     compPartidaGanada();
   //Comprobamos si hay muertos sin avisar en el refresh
-  if(avisoMuerte==false && Muerte==true){
+  if(MasVotado==userId && avisoMuerte == false ){
+    if(rol == "Bufón"){
+      alertHasGanado();
+    }
+    else{
+      Muerte = true;
       avisoMuerte=true;
       avisoDeMuerte();
+    }
   }
   //Enviamos nuestra id si somos lobos
   if(rol=="Lobo")
@@ -558,7 +670,7 @@ function cargar_accion(){
   if (rol=="Cura")
   var accion = '<img src="/img/cura.png" alt="Cura">'
   if (rol=="Psicópata")
-  var accion = '<img src="/img/Psicópata.png" alt="Psicópata"  >'
+  var accion = '<img src="/img/psicopata.png" alt="Psicópata"  >'
   if (rol=="Pistolero")
   var accion = '<img src="/img/pistolero.png" alt="Pistolero"  >'
   if (rol=="Vidente")
@@ -606,7 +718,7 @@ function accion_rol () {
   }
   if(rol=="Psicópata"){
     accion = false;
-    socket.emit("Cuchillada", UsuarioVotado);
+    socket.emit("Cuchillada", UsuarioVotado, userId);
   }
   if (rol=="Doctor"){
     accion = false;
@@ -746,7 +858,9 @@ function votoMuerto(){
     text: 'No puedes votar un muerto'
   })
 }
-
-//=============FINAL PARTIDA===============//
-
-
+function AlertaGanador(){
+  Swal.fire({
+    title: 'Fin de partida',
+    text: 'Ha ganado el equipo:'+EquipoGanador,
+  })
+}
