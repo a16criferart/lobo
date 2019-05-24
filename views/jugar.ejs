@@ -33,8 +33,8 @@
       }
       #partida{
           border: 1px solid black;
-          min-height: 400px;
-          min-width: 500px;
+          min-height: 200px;
+          min-width: 300px;
           background: rgba(46, 46, 53, 0.5);
           /*background: rgba(141, 186, 255, 0.52);*/
           color: whitesmoke;
@@ -110,7 +110,7 @@
       box-sizing: border-box;
     }
       button[type=submit] {
-      width: 19%;
+      width: 18%;
       background-color: rgb(50, 50, 50);
       color:white;
       padding: 5px 5px;
@@ -126,7 +126,7 @@
 
     /*Roles*/
     .rolContainer{
-      margin-top: -5%;
+      margin-top: -10%;
       margin-right: 5%;
       width: 30%;
       float: right;
@@ -159,6 +159,19 @@
       background-color: rgba(220, 220, 220, 0.8);
       border: 2px solid rgb(255, 151, 15);
       font-size: 15px;
+    }
+
+    @media screen and (max-width: 1200px) {
+        /*Chat*/
+        .chat_box{
+        width: 35%;
+      }
+      .message_box{
+        width: 35%;
+      }
+      .rolContainer{
+      margin-top: -15%;
+    }
     }
       </style>
 </head>

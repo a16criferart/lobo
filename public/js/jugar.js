@@ -89,7 +89,7 @@
         socket.emit("MasVotado", MasVotado, MasVotos);
         //Comprobamos si somos nosotros quienes hemos muerto y si no hemos avisado antes
         if(MasVotado==userId && avisoMuerte == false){
-          Muerte = true;
+          Muerte = true; 
           avisoMuerte=true;
           avisoDeMuerte();
         }
@@ -655,3 +655,7 @@ function votoMuerto(){
     text: 'No puedes votar un muerto'
   })
 }
+
+//=============FINAL PARTIDA===============//
+
+
