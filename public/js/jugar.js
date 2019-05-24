@@ -4,7 +4,10 @@
 
   //Datos de usuario
   var rol = null;
+  var partidaAcabada=false;
   var UsuarioVotado = "";
+  var VotacionesHechas=false;
+  var VotacionesHechasLobo= false;
   let MasVotos=0;
   let MasVotado=null;
   let MasVotosLobos=0;
@@ -16,6 +19,7 @@
   var rolvisto="";
   var ArrayLobosCliente = [];
   var asesinado;
+  var IdBufon=null;
 
       console.log("===DATOS===");
       const userId= $('#userid').text();
@@ -55,6 +59,10 @@
 
 //==============CODIGO DE PARTIDA================
   socket.on("estado", function(EstadoPartida, tiempo){
+    //La partida ha acabado?
+    if(partidaAcabada==true)
+      socket.emit("FinalizarPartida");
+
     estado = EstadoPartida;
     //Commprobamos si estamos muertos
     comprobarMuerte();
@@ -72,6 +80,13 @@
 
 
     if(EstadoPartida=="Empezada"){
+      //Enviamos nuestra id si somos lobos
+      if(rol=="Lobo")
+       socket.emit("EnviarLobo", userId);
+       //Enviamos nuestra id si somos el bufon
+       if(rol=="Bufón"){
+         socket.emit("EnviarBufon", userId);
+       }
       //contador para empezar la partida. Le pasamos el siguiente estado
       console.log("Cuenta atrás para empezar la partida. aprox:"+tiempo+" segundos");
       Info.innerHTML = "Cuenta atrás para empezar asignar los roles y comenzar. <div id='segundos'><br>Tiempo: 0 segundos</div>";
@@ -85,8 +100,28 @@
 
     }
       if(EstadoPartida=="Noche"){
-        //Enviamos al servidor el usuario que ha sido mas votado
-        socket.emit("MasVotado", MasVotado, MasVotos);
+        if(VotacionesHechas==true){
+          if(MasVotado==IdBufon){
+            //Se ha acabado la partida porque ha ganado el bufón
+            alertBufon();
+            partidaAcabada=true;
+            if(IdBufon==userId){
+              avisoMuerte=true;
+              setTimeout(alertHasGanado, 3000);
+            }
+            else{
+              setTimeout(alertHasPerdido, 3000);
+              }
+              socket.emit("FinalizarPartida");
+              EstadoPartida="Finalizada";
+              estado="Finalizada";
+          }
+
+          //Enviamos al servidor el usuario que ha sido mas votado
+          socket.emit("MasVotado", MasVotado, MasVotos);
+          VotacionesHechas=false;
+        }
+
         //Comprobamos si somos nosotros quienes hemos muerto y si no hemos avisado antes
         if(MasVotado==userId && avisoMuerte == false){
           Muerte = true; 
@@ -95,9 +130,6 @@
         }
         //activamos la habilidad de la vidente
         accionVidente=true;
-        //Enviamos nuestra id si somos lobos
-        if(rol=="Lobo")
-         socket.emit("EnviarLobo", userId);
         //logs
         console.log("Es de noche.");
         console.log("Los lobos votan a un aldeano para morir");
@@ -123,8 +155,11 @@
 
       }
      if (EstadoPartida=="Dia") {
-       //Enviamos al servidor el usuario que ha sido matado por los lobos
-       socket.emit("MasVotadoLobos", MasVotadoLobos, MasVotosLobos);
+       if(VotacionesHechasLobo==true){
+         //Enviamos al servidor el usuario que ha sido matado por los lobos
+         socket.emit("MasVotadoLobos", MasVotadoLobos, MasVotosLobos);
+         VotacionesHechasLobo=false;
+       }
        //Comprobamos si somos nosotros quienes hemos muerto y si no hemos avisado antes
        if(MasVotadoLobos==userId || asesinado==userId && avisoMuerte == false){
          Muerte = true;
@@ -141,6 +176,9 @@
         $( "#chat_dia" ).show();
         }
       }
+      if(EstadoPartida=="Finalizada"){
+        setTimeout(  location.href ="/perfil", 4000 );
+      }
 
   });
   socket.on("ActualizarTablero", function(){
@@ -151,10 +189,6 @@
   socket.on("rolesAsignados", function(){
     //cogemos el rol del usuario ahora por si se ha conectado tarde
     coger_rol();
-  });
-
-  socket.on("alerta", function(){
-    alert("HOLA")
   });
 
   socket.on('tiempo', function(segundos) {
@@ -225,9 +259,11 @@ function votar(e){
       //Nos estamos votando a nosotros mismos?
       if(estado=="Votaciones"){
       //Se puede votar?
-        if(UsuarioVotado != userId)
-        //Enviamos el voto al servidor
-          socket.emit("voto", UsuarioVotado, userId, username);
+        if(UsuarioVotado != userId){
+          //Enviamos el voto al servidor
+            socket.emit("voto", UsuarioVotado, userId, username);
+            VotacionesHechas=true;
+        }
         else //Alertas de error vvv
           Swal.fire({
             type: 'error',
@@ -241,6 +277,7 @@ function votar(e){
       if(estado=="Noche" && rol=="Lobo"){
         //Nos votamos a nosotros mismos?
           if(UsuarioVotado != userId){
+            VotacionesHechasLobo=true;
             //Enviamos el voto al servidor
               socket.emit("votoLobo", UsuarioVotado, userId, username);
             }
@@ -337,7 +374,7 @@ function check_usuario_sala(id_usuario, IDPartida){
                      '<i class="fa fa-thumbs-up"></i> Ok',
                    confirmButtonAriaLabel: 'Ok'
                  })
-              setTimeout(4000,  location.href ="/perfil");
+              setTimeout(  location.href ="/perfil", 4000 );
              }
          })
 }
@@ -402,6 +439,14 @@ function tablero(){
       avisoMuerte=true;
       avisoDeMuerte();
   }
+  //Enviamos nuestra id si somos lobos
+  if(rol=="Lobo")
+   socket.emit("EnviarLobo", userId);
+   //Enviamos nuestra id si somos el bufon
+   if(rol=="Bufón"){
+     socket.emit("EnviarBufon", userId);
+   }
+
   //Tablero
   var trHTML = '<tr>';
   var cont=0;
@@ -591,6 +636,10 @@ socket.on("VotoRecibidoLobo", function(ArrayVotosLobo){
 
 /*ACCIONES Y UTILIDADES DE ROL */
 
+socket.on("DevolverBufon", function(Bufon){
+  IdBufon=Bufon;
+});
+
 function verRolVidente(){
   db.collection("usuarios").where("id_usuario","==",UsuarioVotado)
        .get().then(function(usuari) {
@@ -615,6 +664,39 @@ function pintarRolVidente(){
 
 //==========ALERTS===========
 
+function alertBufon(){
+  Swal.fire({
+      title: '<h1><strong>¡Has votado al bufón!</strong></h1>',
+      html:
+        '<img src="https://image.flaticon.com/icons/png/512/329/329617.png" alt="Bufón" width="150px" height="170px"></img><br> ' +
+        'El bufón ha ganado la partida',
+      confirmButtonText:
+        '<i class="fa fa-thumbs-up"></i>Me han engañado',
+    });
+}
+
+function alertHasGanado(){
+  Swal.fire({
+      title: '<h1><strong>¡Has ganado la partida!</strong></h1>',
+      html:
+        '<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSpcmlr2g5oyKxDUoBnCeBHK3CxNfhy-ZxU8iOaroNqIzwtBlDIgg" alt="Ganada" width="150px" height="170px"></img><br> ' +
+        'Felicidades',
+      confirmButtonText:
+        '<i class="fa fa-thumbs-up"></i>¡Como molo!',
+    });
+}
+
+function alertHasPerdido(){
+  Swal.fire({
+      title: '<h1><strong>¡Has perdido la partida!</strong></h1>',
+      html:
+        '<img src="https://png.pngtree.com/element_pic/00/16/08/0557a3ee9cdb8e9.jpg" alt="Perdida" width="150px" height="170px"></img><br> ' +
+        'Vuelve a intentarlo',
+      confirmButtonText:
+        '<i class="fa fa-thumbs-up"></i> :()',
+    });
+}
+
 function avisoDeMuerte(){
   Swal.fire({
       title: '<h1><strong>Oof!</strong></h1>',
@@ -635,7 +717,7 @@ function avisoRol(){
   else if (rolvisto=="Psicópata") {
     equipo="Pertenece al equipo de los malos. ¡Matarlo!";
   }
-  else if (rolvisto=="Bufon") {
+  else if (rolvisto=="Bufón") {
     equipo="Es un bufón ¡no se le puede votar o ganará!";
   }
 
