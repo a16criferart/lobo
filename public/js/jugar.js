@@ -20,6 +20,7 @@
   var ArrayLobosCliente = [];
   var asesinado;
   var IdBufon=null;
+  var Ganador=false;
 
       console.log("===DATOS===");
       const userId= $('#userid').text();
@@ -59,6 +60,15 @@
 
 //==============CODIGO DE PARTIDA================
   socket.on("estado", function(EstadoPartida, tiempo){
+    //ENVIAMOS ROLES A CADA CAMBIO POR SEGURIDAD
+    //Enviamos nuestra id si somos lobos
+    if(rol=="Lobo")
+     socket.emit("EnviarLobo", userId);
+     //Enviamos nuestra id si somos el bufon
+     if(rol=="Bufón"){
+       socket.emit("EnviarBufon", userId);
+     }
+
     //La partida ha acabado?
     if(partidaAcabada==true)
       socket.emit("FinalizarPartida");
@@ -80,13 +90,6 @@
 
 
     if(EstadoPartida=="Empezada"){
-      //Enviamos nuestra id si somos lobos
-      if(rol=="Lobo")
-       socket.emit("EnviarLobo", userId);
-       //Enviamos nuestra id si somos el bufon
-       if(rol=="Bufón"){
-         socket.emit("EnviarBufon", userId);
-       }
       //contador para empezar la partida. Le pasamos el siguiente estado
       console.log("Cuenta atrás para empezar la partida. aprox:"+tiempo+" segundos");
       Info.innerHTML = "Cuenta atrás para empezar asignar los roles y comenzar. <div id='segundos'><br>Tiempo: 0 segundos</div>";
@@ -100,34 +103,50 @@
 
     }
       if(EstadoPartida=="Noche"){
+        //si se ha votado durante el día
         if(VotacionesHechas==true){
-          if(MasVotado==IdBufon){
-            //Se ha acabado la partida porque ha ganado el bufón
-            alertBufon();
-            partidaAcabada=true;
-            if(IdBufon==userId){
-              avisoMuerte=true;
-              setTimeout(alertHasGanado, 3000);
-            }
-            else{
-              setTimeout(alertHasPerdido, 3000);
-              }
-              socket.emit("FinalizarPartida");
-              EstadoPartida="Finalizada";
-              estado="Finalizada";
-          }
-
           //Enviamos al servidor el usuario que ha sido mas votado
           socket.emit("MasVotado", MasVotado, MasVotos);
+          //reiniciamos la var
           VotacionesHechas=false;
+          //Si el más votado es el bufón
+          if(MasVotado==IdBufon && IdBufon!=null){
+            //Se ha acabado la partida porque ha ganado el bufón
+            console.log("1");
+            alertBufon();
+            //no damos más avisos de muerte
+            avisoMuerte=true;
+            partidaAcabada=true;
+
+            EstadoPartida="Finalizada";
+            estado="Finalizada";
+
+            //Damos tiempo
+
+            //Somos nosotros?
+            if(rol == "Bufón"){
+              console.log("3");
+              Muerto=false;
+              Ganador=true;
+              setTimeout(alertHasGanado, 3000);
+              //alertHasGanado();
+            }
+            else{
+              console.log("3b");
+              setTimeout(alertHasPerdido, 3000);
+              //alertHasPerdido();
+            }
+          }
+          else{
+            //Comprobamos si somos nosotros quienes hemos muerto y si no hemos avisado antes
+            if(MasVotado==userId && avisoMuerte == false &&  partidaAcabada==false && rol!="Bufón"){
+              Muerte = true;
+              avisoMuerte=true;
+              avisoDeMuerte();
+            }
+          }
         }
 
-        //Comprobamos si somos nosotros quienes hemos muerto y si no hemos avisado antes
-        if(MasVotado==userId && avisoMuerte == false){
-          Muerte = true; 
-          avisoMuerte=true;
-          avisoDeMuerte();
-        }
         //activamos la habilidad de la vidente
         accionVidente=true;
         //logs
@@ -177,7 +196,8 @@
         }
       }
       if(EstadoPartida=="Finalizada"){
-        setTimeout(  location.href ="/perfil", 4000 );
+        sleep(5000);
+        setTimeout("location.href ='/perfil';",5000);
       }
 
   });
@@ -422,10 +442,15 @@ function comprobarMuerte(){
     }
   });
   sleep(900);
-  if(MasVotado==userId && avisoMuerte == false){
-    Muerte = true;
-    avisoMuerte=true;
-    avisoDeMuerte();
+  if(MasVotado==userId && avisoMuerte == false ){
+    if(rol == "Bufón"){
+      alertHasGanado();
+    }
+    else{
+      Muerte = true;
+      avisoMuerte=true;
+      avisoDeMuerte();
+    }
   }
 }
 
@@ -435,9 +460,15 @@ function sleep(ms) {
 //=================TABLERO==================
 function tablero(){
   //Comprobamos si hay muertos sin avisar en el refresh
-  if(avisoMuerte==false && Muerte==true){
+  if(MasVotado==userId && avisoMuerte == false ){
+    if(rol == "Bufón"){
+      alertHasGanado();
+    }
+    else{
+      Muerte = true;
       avisoMuerte=true;
       avisoDeMuerte();
+    }
   }
   //Enviamos nuestra id si somos lobos
   if(rol=="Lobo")
@@ -558,7 +589,7 @@ function cargar_accion(){
   if (rol=="Cura")
   var accion = '<img src="/img/cura.png" alt="Cura">'
   if (rol=="Psicópata")
-  var accion = '<img src="/img/Psicópata.png" alt="Psicópata"  >'
+  var accion = '<img src="/img/psicopata.png" alt="Psicópata"  >'
   if (rol=="Pistolero")
   var accion = '<img src="/img/pistolero.png" alt="Pistolero"  >'
   if (rol=="Vidente")
@@ -737,7 +768,3 @@ function votoMuerto(){
     text: 'No puedes votar un muerto'
   })
 }
-
-//=============FINAL PARTIDA===============//
-
-

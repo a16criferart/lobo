@@ -150,10 +150,11 @@ var votosLobo = new Map();
 var ArrayVotos = [];
 var ArrayVotosLobo = [];
 var ArrayMuertos= [];
-//var AuxNombreUsuarioVotado;
 var AuxNombreMasVotado;
 var CopiaAuxMasVotado;
 var CopiaAuxMasVotadoLobos;
+//partida
+var partidaAcabada = false;
 //roles
 var ArrayLobos = [];
 var ObjetivoRol=null;
@@ -469,6 +470,22 @@ socket.on("Cuchillada", function(UsuarioVotado){
   //CONTROL DE MUERTOS
   //Más votado
   socket.on("MasVotado", function(MasVotado, MasVotos){
+
+    if(IdBufon==MasVotado){
+      EstadoPartida="Finalizada";
+      partidaAcabada=true;
+      var msj = {
+        author: "- Servidor -",
+        text: "<h2><b>La aldea ha votado al bufón ¡Él gana!</h2></b>"
+      }
+      //Enviamos el mensaje por chat
+      messages.push(msj);
+      io.sockets.emit('messages', messages);
+
+      manejar_estado();
+    }
+    else{
+
     var UsuarioVotado=" "+MasVotado;
     //Cambiamos su estado vivo ---> muerto
     MatarUsuario(MasVotado);
@@ -493,17 +510,17 @@ socket.on("Cuchillada", function(UsuarioVotado){
         text: "<h5><b>Se ha linchado hoy.</h5></b>"
       }
     }
+      //Guardamos el ultimo linchado
+      CopiaAuxMasVotado=nombre;
+      //actualizamos tablero
+      socket.emit("ActualizarTablero");
       //Enviamos el mensaje por chat
       messages.push(msj);
       io.sockets.emit('messages', messages);
-      //Guardamos el ultimo linchado
-      CopiaAuxMasVotado=nombre;
 
-      //actualizamos tablero
-      socket.emit("ActualizarTablero");
+    }
 
-        votos.clear();
-
+    votos.clear();
   });
   //Más votado de los lobos
   socket.on("MasVotadoLobos", function(MasVotadoLobos, MasVotosLobos){
@@ -612,6 +629,69 @@ function sacarNombre(id){
 }
 
 function manejar_estado(){
+  if(partidaAcabada==false && EstadoPartida!="Finalizada"){
+    var tiempo_espera="";
+
+    if(EstadoPartida=="Pendiente"){
+    //empieza la partida tras una espera de unos segundos
+    //Si hay 8 jugadores esperaremos 60s
+    tiempo_espera = 10000;
+    //si hay menos de 10 y mas de 8, 30s
+    if(NumUsuarios>8 && NumUsuarios<10)
+      tiempo_espera = 10000;
+    //si hay más de 10, 10s
+    else if (NumUsuarios>10)
+      tiempo_espera = 10000;
+
+    console.log("Hay suficientes jugadores para empezar, vamos a cambiar el estado de la partida dentro de "+tiempo_espera/1000+" segundos. Esperamos posibles nuevos jugadores.");
+    setTimeout(cambiar_estado,tiempo_espera,"Empezada");
+  }
+  if(EstadoPartida=="Empezada"){
+    //asignar roles
+    asignar_roles();
+    //contador para empezar la partida. Le pasamos el siguiente estado
+    console.log("Cuenta atrás para empezar la partida: ");
+    tiempo_espera=8;
+    contador(tiempo_espera, "Asignando");
+  }
+
+  if(EstadoPartida=="Asignando"){
+    tiempo_espera=3;
+    contador(tiempo_espera, "Noche");
+  }
+
+  if(EstadoPartida=="Noche"){
+      //Reiniciamos la cuchillada para el psicópata
+      cuchillada=true;
+
+      console.log("Es de noche.");
+      console.log("Los lobos votan a un aldeano para morir");
+      tiempo_espera=10;
+
+      contador(tiempo_espera, "Dia");
+    }
+
+  if (EstadoPartida=="Votaciones") {
+      console.log("Es momento de votar a los lobos/ Psicópata");
+      console.log("Volverá la noche");
+      tiempo_espera=10;
+
+      contador(tiempo_espera, "Noche");
+    }
+
+   if (EstadoPartida=="Dia") {
+     //Un nuevo día, reiniciamos el array de votos
+      ArrayVotos=[];
+      console.log("Votos reiniciados");
+      console.log("Es de día.");
+      console.log("Un par de aldeanos han muerto por el  Psicópata y por los lobos");
+      console.log("Es momento de discutir");
+      tiempo_espera=10;
+
+      contador(tiempo_espera, "Votaciones");
+    }
+  }
+
   if(EstadoPartida=="Finalizada"){
     console.log("La partida ha acabado<<<<<<<<<<");
     //Borramos los usuarios en esta sala
@@ -620,64 +700,8 @@ function manejar_estado(){
     var partida = db.collection('partida').doc(IDPartida);
     // Set the 'capital' field of the city
     var updateSingle = partida.update({estado: "Pendiente"});
-    return;
   }
-  var tiempo_espera="";
 
-  if(EstadoPartida=="Pendiente"){
-  //empieza la partida tras una espera de unos segundos
-  //Si hay 8 jugadores esperaremos 60s
-  tiempo_espera = 10000;
-  //si hay menos de 10 y mas de 8, 30s
-  if(NumUsuarios>8 && NumUsuarios<10)
-    tiempo_espera = 10000;
-  //si hay más de 10, 10s
-  else if (NumUsuarios>10)
-    tiempo_espera = 10000;
-
-  console.log("Hay suficientes jugadores para empezar, vamos a cambiar el estado de la partida dentro de "+tiempo_espera/1000+" segundos. Esperamos posibles nuevos jugadores.");
-  setTimeout(cambiar_estado,tiempo_espera,"Empezada");
-}
-if(EstadoPartida=="Empezada"){
-  //asignar roles
-  asignar_roles();
-  //contador para empezar la partida. Le pasamos el siguiente estado
-  console.log("Cuenta atrás para empezar la partida: ");
-  tiempo_espera=8;
-  contador(tiempo_espera, "Asignando");
-}
-if(EstadoPartida=="Asignando"){
-  tiempo_espera=3;
-  contador(tiempo_espera, "Noche");
-}
-  if(EstadoPartida=="Noche"){
-    //Reiniciamos la cuchillada para el psicópata
-    cuchillada=true;
-
-    console.log("Es de noche.");
-    console.log("Los lobos votan a un aldeano para morir");
-    tiempo_espera=10;
-
-    contador(tiempo_espera, "Dia");
-  }
-  if (EstadoPartida=="Votaciones") {
-    console.log("Es momento de votar a los lobos/ Psicópata");
-    console.log("Volverá la noche");
-    tiempo_espera=10;
-
-    contador(tiempo_espera, "Noche");
-  }
- if (EstadoPartida=="Dia") {
-   //Un nuevo día, reiniciamos el array de votos
-    ArrayVotos=[];
-    console.log("Votos reiniciados");
-    console.log("Es de día.");
-    console.log("Un par de aldeanos han muerto por el  Psicópata y por los lobos");
-    console.log("Es momento de discutir");
-    tiempo_espera=10;
-
-    contador(tiempo_espera, "Votaciones");
-  }
   //Hemos acabado, enviamos el estado de la PARTIDA
   io.sockets.emit("estado", EstadoPartida, tiempo_espera);
 }
@@ -701,21 +725,26 @@ function cambiar_estado(estado){
 }
 
 function contador(tiempo, SiguienteEstado) {
+    if(partidaAcabada==false || EstadoPartida=="Finalizada"){
+      var counter = tiempo;
+        var interval = setInterval(function() {
+        counter--;
+        console.log(counter)
+        io.sockets.emit("tiempo", counter);
+        if (counter == 0) {
+            // Display message
+            console.log("Contador terminado");
+            clearInterval(interval);
+            //cambiar_estado(SiguienteEstado);
+            EstadoPartida=SiguienteEstado;
+            manejar_estado();
+        }
+    }, 1000);
+  }else{
+    EstadoPartida="Finalizada";
+    console.log("La partida ha acabado.");
+  }
 
-    var counter = tiempo;
-      var interval = setInterval(function() {
-      counter--;
-      console.log(counter)
-      io.sockets.emit("tiempo", counter);
-      if (counter == 0) {
-          // Display message
-          console.log("Contador terminado");
-          clearInterval(interval);
-          //cambiar_estado(SiguienteEstado);
-          EstadoPartida=SiguienteEstado;
-          manejar_estado();
-      }
-  }, 1000);
 }
 
 //====ROLES====
