@@ -21,6 +21,7 @@
   var asesinado;
   var IdBufon=null;
   var Ganador=false;
+  var EquipoGanador=null;
 
       console.log("===DATOS===");
       const userId= $('#userid').text();
@@ -68,6 +69,13 @@
      if(rol=="Bufón"){
        socket.emit("EnviarBufon", userId);
      }
+     //Si somos aldea
+     if(rol!="Psicópata" && rol!="Lobo" && rol!="Bufón"){
+       socket.emit("EnviarAldea", userId);
+     }
+
+     //Comprobamos que la partida no esté ganada
+     compPartidaGanada();
 
     //La partida ha acabado?
     if(partidaAcabada==true)
@@ -117,7 +125,7 @@
             //no damos más avisos de muerte
             avisoMuerte=true;
             partidaAcabada=true;
-
+            EquipoGanador="Bufón";
             EstadoPartida="Finalizada";
             estado="Finalizada";
 
@@ -127,7 +135,6 @@
             if(rol == "Bufón"){
               console.log("3");
               Muerto=false;
-              Ganador=true;
               setTimeout(alertHasGanado, 3000);
               //alertHasGanado();
             }
@@ -196,7 +203,10 @@
         }
       }
       if(EstadoPartida=="Finalizada"){
+        AlertaGanador();
+
         sleep(5000);
+
         setTimeout("location.href ='/perfil';",5000);
       }
 
@@ -239,6 +249,74 @@
     }
   });
 //======FUNCIONES!!======
+
+function compPartidaGanada(){
+  var check="False";
+
+  //Si hay menos aldea que Lobos
+  socket.emit("ComprobarLobosAldeanos");
+  socket.on("Check", function(valor){
+    check=valor;
+  });
+
+  if(check=="True")
+    EquipoGanador="Lobos";
+
+  //Si hay 1 lobo 1 aldea gana lobos
+  if(check=="False"){
+    socket.emit("ComprobarLoboAldeano")
+    socket.on("Check", function(valor){
+      check=valor;
+    });
+
+    if(check=="True")
+      EquipoGanador="Lobos";
+
+  }
+
+
+  //si hay 1 lobo 1 asesino gana asesino
+  if(check=="False"){
+    socket.emit("ComprobarLoboAsesino")
+    socket.on("Check", function(valor){
+      check=valor;
+    });
+    if(check=="True")
+      EquipoGanador="Asesino";
+  }
+
+  //si hay 1 asesino 1 aldea gana asesino
+  if(check=="False"){
+    socket.emit("ComprobarAsesinoAldeano")
+    socket.on("Check", function(valor){
+      check=valor;
+    });
+    if(check=="True")
+      EquipoGanador="Asesino";
+  }
+
+
+  //Si el asesino esta solo gana asesino
+  if(check=="False"){
+    socket.emit("ComprobarAsesino")
+    socket.on("Check", function(valor){
+      check=valor;
+    });
+    if(check=="True")
+      EquipoGanador="Asesino";
+  }
+
+
+  if(check=="True")
+    return true;
+
+  else if(check ==  "False"){
+    return false;
+  }
+
+}
+
+
 
 function contarFreq(arr) {
     var a = [], b = [], prev;
@@ -361,6 +439,7 @@ function comprobar_usuario(id_usuario, username, IDPartida){
              else{
                console.log("El usuario no existia en la partida");
                añadir_jugador(id_usuario,username,IDPartida )
+               tablero();
              }
          })
   }
@@ -459,6 +538,8 @@ function sleep(ms) {
 }
 //=================TABLERO==================
 function tablero(){
+ //Comprobamos que la partida no esté ganada
+     compPartidaGanada();
   //Comprobamos si hay muertos sin avisar en el refresh
   if(MasVotado==userId && avisoMuerte == false ){
     if(rol == "Bufón"){
@@ -637,7 +718,7 @@ function accion_rol () {
   }
   if(rol=="Psicópata"){
     accion = false;
-    socket.emit("Cuchillada", UsuarioVotado);
+    socket.emit("Cuchillada", UsuarioVotado, userId);
   }
 
 }
@@ -766,5 +847,11 @@ function votoMuerto(){
     type: 'error',
     title: 'Oops...',
     text: 'No puedes votar un muerto'
+  })
+}
+function AlertaGanador(){
+  Swal.fire({
+    title: 'Fin de partida',
+    text: 'Ha ganado el equipo:'+EquipoGanador,
   })
 }

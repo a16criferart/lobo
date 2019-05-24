@@ -156,6 +156,7 @@ var CopiaAuxMasVotadoLobos;
 //partida
 var partidaAcabada = false;
 //roles
+var ArrayAldea = [];
 var ArrayLobos = [];
 var ObjetivoRol=null;
 var NombreUsuarioRol=null;
@@ -164,9 +165,11 @@ var CargaHechicero=true;
 var AguaBendita=1;
 var cuchillada=true;
 var IdBufon=null;
+var IdAsesino=null;
 //===SOCKET===
 io.on('connection', function(socket) {
   socket.emit('hola', EstadoPartida);
+  io.sockets.emit("ActualizarTablero");
 
   //chat dia
   socket.emit('messages', messages);
@@ -196,13 +199,17 @@ socket.on("EnviarLobo", function(userId){
 });
 
 //Bufon
-
 //Bufón recibido en el cliente, avisa al servidor
 socket.on("EnviarBufon", function(userId){
   //Aguardamos el Bufón
   IdBufon=userId;
   //Lo enviamos a los clientes
   io.sockets.emit("DevolverBufon", IdBufon)
+});
+//ALDEA
+socket.on("EnviarAldea", function(aldeano){
+  if(!ArrayAldea.includes(aldeano))
+    ArrayAldea.push(aldeano);
 });
 
 //pistolero
@@ -304,7 +311,7 @@ socket.on("AguaBendita", function(userId, UsuarioVotado, username){
     //matamos
     MatarUsuario(muerto);
     //Añadimos al muerto
-    ArrayMuertos.push(UsuarioVotado);
+    ArrayMuertos.push(muerto);
     //cogemos el nombre
     ObjetivoRol= sacarNombre(muerto);
      //Si hay algun objetivo
@@ -337,7 +344,9 @@ socket.on("AguaBendita", function(userId, UsuarioVotado, username){
 
 
 //Psicópata
-socket.on("Cuchillada", function(UsuarioVotado){
+socket.on("Cuchillada", function(UsuarioVotado, userId){
+  IdAsesino=userId;
+
   if(cuchillada==true){
       //matamos
       MatarUsuario(UsuarioVotado);
@@ -470,7 +479,6 @@ socket.on("Cuchillada", function(UsuarioVotado){
   //CONTROL DE MUERTOS
   //Más votado
   socket.on("MasVotado", function(MasVotado, MasVotos){
-
     if(IdBufon==MasVotado){
       EstadoPartida="Finalizada";
       partidaAcabada=true;
@@ -485,14 +493,12 @@ socket.on("Cuchillada", function(UsuarioVotado){
       manejar_estado();
     }
     else{
-
-    var UsuarioVotado=" "+MasVotado;
-    //Cambiamos su estado vivo ---> muerto
-    MatarUsuario(MasVotado);
+     //Cambiamos su estado vivo ---> muerto
+     MatarUsuario(MasVotado);
      //Añadimos al muerto
      ArrayMuertos.push(MasVotado);
      //Log en el servidor
-    console.log("Se ha matado al usuario "+UsuarioVotado+" con "+MasVotos+" votos.");
+    console.log("Se ha matado al usuario "+MasVotado+" con "+MasVotos+" votos.");
 
     //Sacamos el usuario
     nombre= sacarNombre(MasVotado);
@@ -519,7 +525,6 @@ socket.on("Cuchillada", function(UsuarioVotado){
       io.sockets.emit('messages', messages);
 
     }
-
     votos.clear();
   });
   //Más votado de los lobos
@@ -567,6 +572,150 @@ socket.on("Cuchillada", function(UsuarioVotado){
 socket.on("FinalizarPartida", function(){
   EstadoPartida="Finalizada"
 });
+
+
+//===ESTADOS DE GANADO====
+
+//Si hay menos aldea que Lobos
+socket.on("ComprobarLobosAldeanos", function(){
+  console.log("Comprobando que hay más aldea que lobos");
+  var contLobos=ArrayLobos.length;
+  var contAldea=ArrayAldea.length;
+
+  for (var i = 0; i < ArrayMuertos.length; i++) {
+    if(ArrayAldea.includes(ArrayMuertos[i]) )
+      contAldea--;
+    else if(ArrayLobos.includes(ArrayMuertos[i]) )
+      contLobos--;
+  }
+  //Más aldea que lobos?
+  if(contAldea>contLobos){
+    var valor="False";
+  }
+  //más lobos que aldea
+  else
+    var valor="True";
+
+  socket.emit("Check", valor);
+
+});
+
+//Si hay 1 y 1 de lobo y aldea
+
+  socket.on("ComprobarLoboAldeano", function(){
+    console.log("Comprobando que no sea 1 y 1 lobo aldea");
+  var contLobos=ArrayLobos.length;
+  var contAldea=ArrayAldea.length;
+
+  for (var i = 0; i < ArrayMuertos.length; i++) {
+    if(ArrayAldea.includes(ArrayMuertos[i]) )
+      contAldea--;
+    else if(ArrayLobos.includes(ArrayMuertos[i]) )
+      contLobos--;
+  }
+  //Están 1 y 1?
+  if(contAldea==contLobos && contAldea==1){
+    var valor="true";
+  }
+  //No es el caso
+  else
+    var valor="True";
+
+  socket.emit("Check", valor);
+
+});
+
+//Si hay 1 lobo y 1 asesino
+
+  socket.on("ComprobarLoboAsesino", function(){
+  console.log("Comprobando que no sea 1 lobo y 1 asesino");
+  var contLobos=ArrayLobos.length;
+  var contAldea=ArrayAldea.length;
+  var AsesinoVivo=true;
+
+  for (var i = 0; i < ArrayMuertos.length; i++) {
+    if(ArrayAldea.includes(ArrayMuertos[i]) )
+      contAldea--;
+    else if(ArrayLobos.includes(ArrayMuertos[i]) )
+      contLobos--;
+  }
+
+  if(ArrayMuertos.includes(IdAsesino))
+    AsesinoVivo=false;
+
+  //Están 1 a 1 el lobo y el asesino?
+    if(contAldea==0 && contLobos==1 && AsesinoVivo==true){
+    var valor="True";
+  }
+  //No es el caso
+  else
+    var valor="False";
+
+  socket.emit("Check", valor);
+
+});
+
+
+//Si hay 1 aldeano y 1 asesino
+
+  socket.on("ComprobarAsesinoAldeano", function(){
+    console.log("Comprobando que no sea 1 aldeano y 1 asesino");
+  var contLobos=ArrayLobos.length;
+  var contAldea=ArrayAldea.length;
+  var AsesinoVivo=true;
+
+  for (var i = 0; i < ArrayMuertos.length; i++) {
+    if(ArrayAldea.includes(ArrayMuertos[i]) )
+      contAldea--;
+    else if(ArrayLobos.includes(ArrayMuertos[i]) )
+      contLobos--;
+  }
+
+  if(ArrayMuertos.includes(IdAsesino))
+    AsesinoVivo=false;
+
+  //Están 1 aldeano y 1 asesino?
+    if(contAldea==1 && contLobos==0 && AsesinoVivo==true){
+    var valor="True";
+  }
+  //No es el caso
+  else
+    var valor="False";
+
+  socket.emit("Check", valor);
+
+});
+
+//Si hay solamente 1 asesino
+
+  socket.on("ComprobarAsesinoAldeano", function(){
+  console.log("Comprobando que no sea solo 1 asesino");
+  var contLobos=ArrayLobos.length;
+  var contAldea=ArrayAldea.length;
+  var AsesinoVivo=true;
+
+  for (var i = 0; i < ArrayMuertos.length; i++) {
+    if(ArrayAldea.includes(ArrayMuertos[i]) )
+      contAldea--;
+    else if(ArrayLobos.includes(ArrayMuertos[i]) )
+      contLobos--;
+  }
+
+  if(ArrayMuertos.includes(IdAsesino))
+    AsesinoVivo=false;
+
+  //Están 1 aldeano y 1 asesino?
+    if(contAldea==0 && contLobos==0 && AsesinoVivo==true){
+    var valor="True";
+  }
+  //No es el caso
+  else
+    var valor="False";
+
+  socket.emit("Check", valor);
+
+});
+
 //fin sockets
 });
 
