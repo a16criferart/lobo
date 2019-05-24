@@ -246,9 +246,9 @@ function votar(e){
       if (UsuarioVotado != userId && Muerte==false && accion==true){
         if(rol=="Vidente" && estado=="Noche" && accionVidente==true)
           accion_rol();
-        else if((rol=="Pistolero" || rol=="Cura" || rol =="Hechicero" )&& estado!="Noche" && accion==true)
+        else if((rol=="Pistolero" || rol=="Cura" || rol =="Hechicero")&& estado!="Noche" && accion==true)
           accion_rol();
-        else if(rol=="Psicópata" && estado=="Noche")
+        else if((rol=="Psicópata" || rol =="Doctor" || rol =="Guardaespaldas") && estado=="Noche")
           accion_rol();
       }
     }
@@ -608,6 +608,15 @@ function accion_rol () {
     accion = false;
     socket.emit("Cuchillada", UsuarioVotado);
   }
+  if (rol=="Doctor"){
+    accion = false;
+    socket.emit("ProteccionDoctor", UsuarioVotado);
+  }
+  if (rol=="Guardaespaldas"){
+    accion = false;
+    socket.emit("ProteccionGuarda", UsuarioVotado, userId);
+  }
+
 
 }
 

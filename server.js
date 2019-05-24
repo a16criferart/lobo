@@ -163,6 +163,9 @@ var CargaHechicero=true;
 var AguaBendita=1;
 var cuchillada=true;
 var IdBufon=null;
+var ProtegidoDoctor=null;
+var ProtegidoGuarda=null;
+var Guardaespaldas=null;
 //===SOCKET===
 io.on('connection', function(socket) {
   socket.emit('hola', EstadoPartida);
@@ -373,6 +376,16 @@ socket.on("Cuchillada", function(UsuarioVotado){
   }
 });
 
+socket.on("ProteccionDoctor", function(UsuarioVotado){
+      ProtegidoDoctor=UsuarioVotado;
+});
+socket.on("ProteccionGuarda", function(UsuarioVotado, userId){
+    if (Guardaespaldas==null)
+    Guardaespaldas=userId;
+
+    ProtegidoGuarda=UsuarioVotado;
+});
+
 //========Votaciones=======
 //==VOTO ALDEA==
   socket.on("voto", function(UsuarioVotado, userId, username) {
@@ -507,38 +520,57 @@ socket.on("Cuchillada", function(UsuarioVotado){
   });
   //Más votado de los lobos
   socket.on("MasVotadoLobos", function(MasVotadoLobos, MasVotosLobos){
-    var UsuarioVotado=" "+MasVotadoLobos;
-    //Cambiamos su estado vivo ---> muerto
-    MatarUsuario(MasVotadoLobos);
-     //Añadimos al muerto
-     ArrayMuertos.push(MasVotadoLobos);
-     //Log en el servidor
-    console.log("Los lobos han matado al "+UsuarioVotado+" con "+MasVotosLobos+" votos.");
-
-    //Sacamos el usuario
-    var nombre = sacarNombre(MasVotadoLobos);
-    //Si alguien ha sido linchado...
-    if(AuxNombreMasVotado!=null && nombre!=CopiaAuxMasVotadoLobos){
-      //Mensaje en el chat
+    
+    if (MasVotadoLobos==ProtegidoGuarda){
+      MatarUsuario(Guardaespaldas);
+      console.log("El guardaespaldas ha protegido ha dado su vida por alguien esta noche");
       var msj = {
         author: "- Servidor -",
-        text: "<h5>Los lobos han matado a <b>"+nombre +"con "+MasVotosLobos+" votos.</h5></b>"
-        }
-     }
-     else{
-       var msj = {
-         author: "- Servidor -",
-         text: "<h5>Los lobos han matado a un jugador esta noche.</h5></b>"
-         }
+        text: "<h5>El guardaespaldas ha protegido ha dado su vida por alguien esta noche.</h5>"
       }
-      //Enviamos el mensaje por chat
       messages.push(msj);
       io.sockets.emit('messages', messages);
-      //Guardamos el ultimo linchado
-      CopiaAuxMasVotado=nombre;
+    }
+    else if (MasVotadoLobos==ProtegidoDoctor){
+      console.log("El Doctor ha salvado la vida a alguien esta noche");
+      var msj = {
+        author: "- Servidor -",
+        text: "<h5>El Doctor ha salvado la vida a alguien esta noche</h5>"
+      }
+      messages.push(msj);
+      io.sockets.emit('messages', messages);
+    }
+    else {
+      //Cambiamos su estado vivo ---> muerto
+      MatarUsuario(MasVotadoLobos);
+      //Añadimos al muerto
+      ArrayMuertos.push(MasVotadoLobos);
+      //Log en el servidor
+      console.log("Los lobos han matado al "+MasVotadoLobos+" con "+MasVotosLobos+" votos.");
 
+      //Sacamos el usuario
+      var nombre = sacarNombre(MasVotadoLobos);
+      //Si alguien ha sido linchado...
+      if(AuxNombreMasVotado!=null && nombre!=CopiaAuxMasVotadoLobos){
+        //Mensaje en el chat
+        var msj = {
+          author: "- Servidor -",
+          text: "<h5>Los lobos han matado a <b>"+nombre +"con "+MasVotosLobos+" votos.</h5></b>"
+          }
+      }
+      else{
+        var msj = {
+          author: "- Servidor -",
+          text: "<h5>Los lobos han matado a un jugador esta noche.</h5></b>"
+          }
+        }
+        //Enviamos el mensaje por chat
+        messages.push(msj);
+        io.sockets.emit('messages', messages);
+        //Guardamos el ultimo linchado
+        CopiaAuxMasVotado=nombre;
+    }
         votos.clear();
-
 
     //actualizamos tablero
     socket.emit("ActualizarTablero");
