@@ -473,6 +473,9 @@ function sleep(ms) {
 }
 //=================TABLERO==================
 function tablero(){
+  //Decir rol
+  if(estado!="Pendiente" && estado!="Asignando")
+    $(".RolSpan").html(rol);
  //Comprobamos que la partida no esté ganada
      compPartidaGanada();
   //Comprobamos si hay muertos sin avisar en el refresh
