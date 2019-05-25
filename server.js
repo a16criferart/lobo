@@ -872,14 +872,17 @@ function manejar_estado(){
     }
   }
 
-  if(EstadoPartida=="Finalizada"){
+  if(EstadoPartida=="Finalizada" || partidaAcabada == true){
     console.log("La partida ha acabado<<<<<<<<<<");
     //Borramos los usuarios en esta sala
-    var deleteDoc = db.collection('usuarios').doc(IDPartida).delete();
+    //var deleteDoc = db.collection('usuarios').doc(IDPartida).delete();
+    //var deleteUsuarios = db.collection('usuarios').doc().delete();
+    deleteCollection(db, 'usuarios', 100);
+
     //La marcamos como finalizada
-    var partida = db.collection('partida').doc(IDPartida);
+    var partidaPendiente = db.collection('partida').doc(IDPartida);
     // Set the 'capital' field of the city
-    var updateSingle = partida.update({estado: "Pendiente"});
+    var updateSingle = partidaPendiente.update({estado: "Pendiente"});
   }
 
   //Hemos acabado, enviamos el estado de la PARTIDA
@@ -918,15 +921,55 @@ function contador(tiempo, SiguienteEstado) {
             //cambiar_estado(SiguienteEstado);
             if(partidaAcabada!=true && EstadoPartida !="Finalizada"){
               EstadoPartida=SiguienteEstado;
-              manejar_estado();
             }
-          }
+            manejar_estado();          }
       }, 1000);
   }else{
     EstadoPartida="Finalizada";
     console.log("La partida ha acabado.");
   }
 
+}
+
+function deleteCollection(db, collectionPath, batchSize) {
+  var collectionRef = db.collection(collectionPath);
+  var query = collectionRef.orderBy('__name__').limit(batchSize);
+
+  return new Promise((resolve, reject) => {
+    deleteQueryBatch(db, query, batchSize, resolve, reject);
+  });
+}
+
+function deleteQueryBatch(db, query, batchSize, resolve, reject) {
+  query.get()
+      .then((snapshot) => {
+        // When there are no documents left, we are done
+        if (snapshot.size == 0) {
+          return 0;
+        }
+
+        // Delete documents in a batch
+        var batch = db.batch();
+        snapshot.docs.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+
+        return batch.commit().then(() => {
+          return snapshot.size;
+        });
+      }).then((numDeleted) => {
+        if (numDeleted === 0) {
+          resolve();
+          return;
+        }
+
+        // Recurse on the next process tick, to avoid
+        // exploding the stack.
+        process.nextTick(() => {
+          deleteQueryBatch(db, query, batchSize, resolve, reject);
+        });
+      })
+      .catch(reject);
 }
 
 //====ROLES====
