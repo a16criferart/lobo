@@ -492,9 +492,8 @@ socket.on("ProteccionGuarda", function(UsuarioVotado, userId){
   //CONTROL DE MUERTOS
   //Más votado
   socket.on("MasVotado", function(MasVotado, MasVotos){
-    if(IdBufon==MasVotado){
-      EstadoPartida="Finalizada";
-      partidaAcabada=true;
+    if(IdBufon==MasVotado && IdBufon!=null){
+      console.log("Se ha votado al bufon");
       var msj = {
         author: "- Servidor -",
         text: "<h2><b>La aldea ha votado al bufón ¡Él gana!</h2></b>"
@@ -542,7 +541,7 @@ socket.on("ProteccionGuarda", function(UsuarioVotado, userId){
   });
   //Más votado de los lobos
   socket.on("MasVotadoLobos", function(MasVotadoLobos, MasVotosLobos){
-    
+
     if (MasVotadoLobos==ProtegidoGuarda){
       MatarUsuario(Guardaespaldas);
       console.log("El guardaespaldas ha protegido ha dado su vida por alguien esta noche");
@@ -906,7 +905,7 @@ function cambiar_estado(estado){
 }
 
 function contador(tiempo, SiguienteEstado) {
-    if(partidaAcabada==false || EstadoPartida=="Finalizada"){
+    if(partidaAcabada==false || EstadoPartida!="Finalizada"){
       var counter = tiempo;
         var interval = setInterval(function() {
         counter--;
@@ -917,10 +916,12 @@ function contador(tiempo, SiguienteEstado) {
             console.log("Contador terminado");
             clearInterval(interval);
             //cambiar_estado(SiguienteEstado);
-            EstadoPartida=SiguienteEstado;
-            manejar_estado();
-        }
-    }, 1000);
+            if(partidaAcabada!=true && EstadoPartida !="Finalizada"){
+              EstadoPartida=SiguienteEstado;
+              manejar_estado();
+            }
+          }
+      }, 1000);
   }else{
     EstadoPartida="Finalizada";
     console.log("La partida ha acabado.");

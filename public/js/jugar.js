@@ -75,7 +75,7 @@
      }
 
      //Comprobamos que la partida no esté ganada
-     compPartidaGanada();
+     //compPartidaGanada();
 
     //La partida ha acabado?
     if(partidaAcabada==true)
@@ -113,14 +113,11 @@
       if(EstadoPartida=="Noche"){
         //si se ha votado durante el día
         if(VotacionesHechas==true){
-          //Enviamos al servidor el usuario que ha sido mas votado
-          socket.emit("MasVotado", MasVotado, MasVotos);
           //reiniciamos la var
           VotacionesHechas=false;
           //Si el más votado es el bufón
           if(MasVotado==IdBufon && IdBufon!=null){
             //Se ha acabado la partida porque ha ganado el bufón
-            console.log("1");
             alertBufon();
             //no damos más avisos de muerte
             avisoMuerte=true;
@@ -128,23 +125,19 @@
             EquipoGanador="Bufón";
             EstadoPartida="Finalizada";
             estado="Finalizada";
-
-            //Damos tiempo
-
+            //La acabamos
+            socket.emit("FinalizarPartida");
             //Somos nosotros?
             if(rol == "Bufón"){
-              console.log("3");
-              Muerto=false;
               setTimeout(alertHasGanado, 3000);
-              //alertHasGanado();
             }
             else{
-              console.log("3b");
               setTimeout(alertHasPerdido, 3000);
-              //alertHasPerdido();
             }
           }
           else{
+            //Enviamos al servidor el usuario que ha sido mas votado
+            socket.emit("MasVotado", MasVotado, MasVotos);
             //Comprobamos si somos nosotros quienes hemos muerto y si no hemos avisado antes
             if(MasVotado==userId && avisoMuerte == false &&  partidaAcabada==false && rol!="Bufón"){
               Muerte = true;
@@ -539,7 +532,7 @@ function sleep(ms) {
 //=================TABLERO==================
 function tablero(){
  //Comprobamos que la partida no esté ganada
-     compPartidaGanada();
+     //compPartidaGanada();
   //Comprobamos si hay muertos sin avisar en el refresh
   if(MasVotado==userId && avisoMuerte == false ){
     if(rol == "Bufón"){
@@ -789,7 +782,7 @@ function alertBufon(){
   Swal.fire({
       title: '<h1><strong>¡Has votado al bufón!</strong></h1>',
       html:
-        '<img src="https://image.flaticon.com/icons/png/512/329/329617.png" alt="Bufón" width="150px" height="170px"></img><br> ' +
+        '<img src="/img/bufon.png" alt="Bufón" width="150px" height="170px"></img><br> ' +
         'El bufón ha ganado la partida',
       confirmButtonText:
         '<i class="fa fa-thumbs-up"></i>Me han engañado',
@@ -800,7 +793,7 @@ function alertHasGanado(){
   Swal.fire({
       title: '<h1><strong>¡Has ganado la partida!</strong></h1>',
       html:
-        '<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSpcmlr2g5oyKxDUoBnCeBHK3CxNfhy-ZxU8iOaroNqIzwtBlDIgg" alt="Ganada" width="150px" height="170px"></img><br> ' +
+        '<img src="/img/ganada.png" alt="Ganada" width="150px" height="170px"></img><br> ' +
         'Felicidades',
       confirmButtonText:
         '<i class="fa fa-thumbs-up"></i>¡Como molo!',
