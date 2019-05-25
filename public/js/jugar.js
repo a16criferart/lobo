@@ -119,7 +119,7 @@
       //contador para empezar la partida. Le pasamos el siguiente estado
       console.log("Asignando roles...");
       Info.innerHTML = "Cuenta atrás para empezar la partida. <div id='segundos'><br>Tiempo: 0 segundos</div>";
-      cargar_accion();
+      //cargar_accion();
 
     }
       if(EstadoPartida=="Noche"){
@@ -474,8 +474,10 @@ function sleep(ms) {
 //=================TABLERO==================
 function tablero(){
   //Decir rol
-  if(estado!="Pendiente" && estado!="Asignando")
-    $(".RolSpan").html(rol);
+  if(estado!="Pendiente" && estado!="Asignando"){
+        $(".RolSpan").html(rol);
+        cargar_accion();
+  }
  //Comprobamos que la partida no esté ganada
      compPartidaGanada();
   //Comprobamos si hay muertos sin avisar en el refresh
