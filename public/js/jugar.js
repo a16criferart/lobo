@@ -14,6 +14,7 @@
   let MasVotadoLobos=null;
   var avisoMuerte=false;
   var Muerte = false;
+  var MiEquipo=null;
   var accion = false;
   var accionVidente = false;
   var rolvisto="";
@@ -64,23 +65,33 @@
   socket.on("estado", function(EstadoPartida, tiempo){
     //ENVIAMOS ROLES A CADA CAMBIO POR SEGURIDAD
     //Enviamos nuestra id si somos lobos
-    if(rol=="Lobo")
-     socket.emit("EnviarLobo", userId);
+    if(rol=="Lobo"){
+       MiEquipo="Lobo";
+       socket.emit("EnviarLobo", userId);
+    }
      //Enviamos nuestra id si somos el bufon
      if(rol=="Bufón"){
+       MiEquipo="Bufón";
        socket.emit("EnviarBufon", userId);
      }
      //Si somos aldea
      if(rol!="Psicópata" && rol!="Lobo" && rol!="Bufón"){
+         MiEquipo="Aldea";
        socket.emit("EnviarAldea", userId);
      }
-
+     if(rol=="Psicópata"){
+      socket.emit("EnviarPsicopata", userId);
+      MiEquipo="Psicópata";
+     }
      //Comprobamos que la partida no esté ganada
-     //compPartidaGanada();
+     compPartidaGanada();
 
     //La partida ha acabado?
-    if(partidaAcabada==true)
+    if(partidaAcabada==true){
       socket.emit("FinalizarPartida");
+    }
+
+
 
     estado = EstadoPartida;
     //Commprobamos si estamos muertos
@@ -116,27 +127,6 @@
         if(VotacionesHechas==true){
           //reiniciamos la var
           VotacionesHechas=false;
-          //Si el más votado es el bufón
-          if(MasVotado==IdBufon && IdBufon!=null){
-            //Se ha acabado la partida porque ha ganado el bufón
-            alertBufon();
-            //no damos más avisos de muerte
-            avisoMuerte=true;
-            partidaAcabada=true;
-            EquipoGanador="Bufón";
-            EstadoPartida="Finalizada";
-            estado="Finalizada";
-            //La acabamos
-            socket.emit("FinalizarPartida");
-            //Somos nosotros?
-            if(rol == "Bufón"){
-              setTimeout(alertHasGanado, 3000);
-            }
-            else{
-              setTimeout(alertHasPerdido, 3000);
-            }
-          }
-          else{
             //Enviamos al servidor el usuario que ha sido mas votado
             socket.emit("MasVotado", MasVotado, MasVotos);
             //Comprobamos si somos nosotros quienes hemos muerto y si no hemos avisado antes
@@ -144,7 +134,6 @@
               Muerte = true;
               avisoMuerte=true;
               avisoDeMuerte();
-            }
           }
         }
 
@@ -245,72 +234,24 @@
 //======FUNCIONES!!======
 
 function compPartidaGanada(){
-  var check="False";
-
-  //Si hay menos aldea que Lobos
-  socket.emit("ComprobarLobosAldeanos");
-  socket.on("Check", function(valor){
-    check=valor;
-  });
-
-  if(check=="True")
-    EquipoGanador="Lobos";
-
-  //Si hay 1 lobo 1 aldea gana lobos
-  if(check=="False"){
-    socket.emit("ComprobarLoboAldeano")
-    socket.on("Check", function(valor){
-      check=valor;
-    });
-
-    if(check=="True")
-      EquipoGanador="Lobos";
-
-  }
-
-
-  //si hay 1 lobo 1 asesino gana asesino
-  if(check=="False"){
-    socket.emit("ComprobarLoboAsesino")
-    socket.on("Check", function(valor){
-      check=valor;
-    });
-    if(check=="True")
-      EquipoGanador="Asesino";
-  }
-
-  //si hay 1 asesino 1 aldea gana asesino
-  if(check=="False"){
-    socket.emit("ComprobarAsesinoAldeano")
-    socket.on("Check", function(valor){
-      check=valor;
-    });
-    if(check=="True")
-      EquipoGanador="Asesino";
-  }
-
-
-  //Si el asesino esta solo gana asesino
-  if(check=="False"){
-    socket.emit("ComprobarAsesino")
-    socket.on("Check", function(valor){
-      check=valor;
-    });
-    if(check=="True")
-      EquipoGanador="Asesino";
-  }
-
-
-  if(check=="True")
-    return true;
-
-  else if(check ==  "False"){
-    return false;
-  }
-
+  socket.emit("CheckGanada");
 }
 
+socket.on("PartidaGanada", function(Equipo){
+  EquipoGanador=Equipo;
+  socket.emit("FinalizarPartida");
+  EstadoPartida="Finalizada";
+  estado="Finalizada";
+  if(Equipo="Bufón")
+    alertBufon();
 
+  if(MiEquipo=Equipo)
+    setTimeout(alertHasGanado, 2000);
+  else
+    setTimeout(alertHasPerdido,2000);
+
+
+});
 
 function contarFreq(arr) {
     var a = [], b = [], prev;
@@ -533,7 +474,7 @@ function sleep(ms) {
 //=================TABLERO==================
 function tablero(){
  //Comprobamos que la partida no esté ganada
-     //compPartidaGanada();
+     compPartidaGanada();
   //Comprobamos si hay muertos sin avisar en el refresh
   if(MasVotado==userId && avisoMuerte == false ){
     if(rol == "Bufón"){
