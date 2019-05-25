@@ -48,6 +48,7 @@
     console.log("El estado de la partida es:  "+EstadoPartida);
     //SI  LA PARTIDA ESTÁ SIN EMPEZAR, LE DEJAMOS ENTRAR
     if(EstadoPartida=="Pendiente"){
+      tablero();
     //EXISTIA?
     //SI NO EXISTE LO AÑADIRÁ, SINO NO
       comprobar_usuario(userId, username, IDPartida);

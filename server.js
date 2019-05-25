@@ -80,6 +80,10 @@ console.log("El estado actual de la partida es:" +EstadoPartida);
       var getJugadores = db.collection('usuarios').get()
       .then(usuarios => {
           console.log("En la sala hay:  "+usuarios.size+ " jugadores");
+
+          //CARGAR TABLERO
+          io.sockets.emit("ActualizarTablero");
+          
           //Si hay 8 o más y no se ha empezado la partida
           NumUsuarios=usuarios.size;
           if(usuarios.size==26 && EstadoPartida=="Pendiente")
@@ -105,8 +109,6 @@ console.log("El estado actual de la partida es:" +EstadoPartida);
                 });
                });
              });
-             //CARGAR TABLERO
-             io.sockets.emit("ActualizarTablero");
           }
       })
       .catch(err => {
