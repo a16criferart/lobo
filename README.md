@@ -1,10 +1,10 @@
-# Easy Node Authentication
+# Werewolfs VS Village
 
-Code for the entire scotch.io tutorial series: Complete Guide to Node Authentication
+El nostre projecte final es basa en el joc de cartes "los hombres lobo de Castronegro", un joc de cartes ideal per fer-te unes rialles amb els amics. 
 
-We will be using Passport to authenticate users locally, with Facebook, Twitter, and Google.
 
-#### Upgraded To Express 4.0
+
+#### C
 This tutorial has been upgraded to use ExpressJS 4.0. See [the commit](https://github.com/scotch-io/easy-node-authentication/commit/020dea057d5a0664caaeb041b18978237528f9a3) for specific changes.
 
 ## Instructions
