@@ -28,8 +28,8 @@ El ciclo sigue así hasta que alguno de los equipos gana.
 
 La partida acabara si:
 
--La aldea acaba con el asesino y los lobos
--Los lobos son mayoría y han matado al asesino
+- La aldea acaba con el asesino y los lobos
+- Los lobos son mayoría y han matado al asesino
 - Si el asesino ha matado a todo el mundo
 - Si es 1 lobo y 1 asesino
 - Si es 1 lobo y un aldeano
