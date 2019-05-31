@@ -26,7 +26,7 @@ El ciclo sigue así hasta que alguno de los equipos gana.
 
 # Cómo ganar
 
-La partida acabara si:
+La partida acabará si:
 
 - La aldea acaba con el asesino y los lobos
 - Los lobos son mayoría y han matado al asesino
