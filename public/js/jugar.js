@@ -76,7 +76,7 @@
      }
      //Si somos aldea
      if(rol!="Psicópata" && rol!="Lobo" && rol!="Bufón"){
-         MiEquipo="Aldea";
+       MiEquipo="Aldea";
        socket.emit("EnviarAldea", userId);
      }
      if(rol=="Psicópata"){

@@ -683,7 +683,7 @@ function revelarRol(Usuario){
           });
      });
      setTimeout(function() {
-         console.log('Tiempo de espera por seguiridad (revelar un rol)');
+         console.log('Tiempo de espera por seguridad (revelar un rol)');
      }, 200);
 }
 
@@ -1038,6 +1038,9 @@ function shuffle_rols(array){
 }
 
 // launch ======================================================================
-server.listen(8080, function() {
+/*server.listen(8080, function() {
   console.log("Servidor corriendo en http://localhost:8080");
+});*/
+server.listen(3000, function () {
+console.log('Listening to port:  ' + 3000);
 });
