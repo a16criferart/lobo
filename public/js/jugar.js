@@ -39,7 +39,7 @@
   //======= FUNCIONES SOCKET =====
 
   //Conexión al servidor
-  var socket = io.connect('http://localhost:3000', { 'forceNew': true });
+  var socket = io.connect('http://localhost:7070', { 'forceNew': true });
   //
 
   // HA ENTRADO UN JUGADOR
