@@ -31,13 +31,13 @@
       }
       #partida{
           border: 1px solid black;
-          width:55%;
+          width: 40%;
           /*min-height: 200px;
           min-width: 200px;*/
           background: rgba(46, 46, 53, 0.5);
           /*background: rgba(141, 186, 255, 0.52);*/
           color: whitesmoke;
-          float: left;
+          /* float: left; */
       }
       .rol{
           height: 20%;
@@ -84,9 +84,10 @@
       }
       .message_box{
         width: 45%;
-        border:2px solid transparent;
-        float: right;
-        display: block;
+        right: 0;
+        /* border:2px solid transparent; */
+        position: relative;
+        /* display: block; */
       }
 
       #messages{
@@ -191,9 +192,9 @@
            <a href="/perfil" class="btn btn-default btn-sm">Perfil</a>
            <a href="/logout" class="btn btn-default btn-sm">Logout</a>
        <!-- Vars ocultas-->
-       <span id="userid" hidden> <%= user._id %></span>
-       <span id="username" hidden> <%= user.local.usuario %> </span>
-       <span id="sexo" hidden> <%= user.local.sexo %> </span>
+       <span id="userid" hidden> 5cf6ddab543a0828c85a1f4f</span>
+       <span id="username" hidden> Oriol </span>
+       <span id="sexo" hidden> Hombre </span>
      </div>
 </div>
 

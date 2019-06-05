@@ -760,7 +760,7 @@ function manejar_estado(){
 
       console.log("Es de noche.");
       console.log("Los lobos votan a un aldeano para morir");
-      tiempo_espera=10;
+      tiempo_espera=30;
 
       contador(tiempo_espera, "Dia");
     }
@@ -768,7 +768,7 @@ function manejar_estado(){
   if (EstadoPartida=="Votaciones") {
       console.log("Es momento de votar a los lobos/ Psicópata");
       console.log("Volverá la noche");
-      tiempo_espera=10;
+      tiempo_espera=30;
 
       contador(tiempo_espera, "Noche");
     }
@@ -780,7 +780,7 @@ function manejar_estado(){
       console.log("Es de día.");
       console.log("Un par de aldeanos han muerto por el  Psicópata y por los lobos");
       console.log("Es momento de discutir");
-      tiempo_espera=10;
+      tiempo_espera=30;
 
       contador(tiempo_espera, "Votaciones");
     }
